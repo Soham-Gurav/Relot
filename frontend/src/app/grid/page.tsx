@@ -272,7 +272,7 @@ export default function GridTerminal() {
               <div className="space-y-3">
                 <h4 className="font-bold text-white uppercase tracking-wider text-[11px]">Pages</h4>
                 <ul className="space-y-2 text-neutral-400">
-                  <li><Link href="/" className="hover:text-white transition-colors">Landing</Link></li>
+                  <li><Link href="/" className="hover:text-white transition-colors">Home</Link></li>
                   <li><Link href="/cargo" className="hover:text-white transition-colors">Cargo & Supply Chain</Link></li>
                   <li><Link href="/grid" className="hover:text-white transition-colors">Energy Grid</Link></li>
                   <li><Link href="/stocks" className="hover:text-white transition-colors">Stocks Analytics</Link></li>

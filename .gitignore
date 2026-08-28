@@ -25,6 +25,6 @@ text
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.DS_Store
-.vscode/
-.idea/
+# External Scraped Repositories
+external_repos/
+

@@ -110,57 +110,45 @@ function Marker({ marker, radius, isSelected, onClick, onHover }: MarkerProps) {
   const [hovered, setHovered] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const groupRef = useRef<THREE.Group>(null);
-  const imageGroupRef = useRef<THREE.Group>(null);
   const { camera } = useThree();
 
   const surfacePosition = useMemo(() => {
-    return latLngToVector3(marker.lat, marker.lng, radius * 1.001);
+    return latLngToVector3(marker.lat, marker.lng, radius * 1.002);
   }, [marker.lat, marker.lng, radius]);
 
-  const topPosition = useMemo(() => {
-    return latLngToVector3(marker.lat, marker.lng, radius * 1.12);
-  }, [marker.lat, marker.lng, radius]);
-
-  const lineHeight = topPosition.distanceTo(surfacePosition);
+  const { surfaceQuaternion } = useMemo(() => {
+    const normal = surfacePosition.clone().normalize();
+    const quaternion = new THREE.Quaternion();
+    quaternion.setFromUnitVectors(new THREE.Vector3(0, 0, 1), normal);
+    return { surfaceNormal: normal, surfaceQuaternion: quaternion };
+  }, [surfacePosition]);
 
   useFrame(() => {
-    if (!imageGroupRef.current) return;
-    const worldPos = new THREE.Vector3();
-    imageGroupRef.current.getWorldPosition(worldPos);
+    if (!groupRef.current) return;
+    const worldPos = surfacePosition;
     const markerDirection = worldPos.clone().normalize();
     const cameraDirection = camera.position.clone().normalize();
     const dot = markerDirection.dot(cameraDirection);
-    setIsVisible(dot > 0.05);
+    setIsVisible(dot > 0.08);
   });
-
-  const { lineCenter, lineQuaternion } = useMemo(() => {
-    const center = surfacePosition.clone().lerp(topPosition, 0.5);
-    const direction = topPosition.clone().sub(surfacePosition).normalize();
-    const quaternion = new THREE.Quaternion();
-    quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), direction);
-    return { lineCenter: center, lineQuaternion: quaternion };
-  }, [surfacePosition, topPosition]);
 
   return (
     <group ref={groupRef} visible={isVisible}>
-      {/* Fine Cyan/Rose pin line */}
-      <mesh position={lineCenter} quaternion={lineQuaternion}>
-        <cylinderGeometry args={[0.003, 0.003, lineHeight, 8]} />
-        <meshBasicMaterial
-          color={isSelected || hovered ? "#f43f5e" : "#38bdf8"}
-          transparent
-          opacity={isSelected || hovered ? 0.95 : 0.7}
-        />
-      </mesh>
+      {/* Airport Thermal Microclimate Heatmap Ring */}
+      {!marker.isFlightMarker && (
+        <mesh position={surfacePosition} quaternion={surfaceQuaternion}>
+          <ringGeometry args={[0.02, marker.hasHeatSpike ? 0.08 : 0.05, 32]} />
+          <meshBasicMaterial
+            color={marker.hasHeatSpike ? "#f43f5e" : "#38bdf8"}
+            transparent
+            opacity={marker.hasHeatSpike ? 0.45 : 0.25}
+            side={THREE.DoubleSide}
+          />
+        </mesh>
+      )}
 
-      {/* Surface pin cone head */}
-      <mesh position={surfacePosition} quaternion={lineQuaternion}>
-        <coneGeometry args={[0.015, 0.035, 8]} />
-        <meshBasicMaterial color={isSelected || hovered ? "#f43f5e" : "#0284c7"} />
-      </mesh>
-
-      {/* HTML Location Badge */}
-      <group ref={imageGroupRef} position={topPosition}>
+      {/* HTML Location Badge / Minimal Marker Icon */}
+      <group position={surfacePosition}>
         <Html
           sprite
           center
@@ -172,12 +160,10 @@ function Marker({ marker, radius, isSelected, onClick, onHover }: MarkerProps) {
         >
           <div
             className={cn(
-              "cursor-pointer px-2.5 py-1 rounded-full font-mono text-[11px] font-bold shadow-xl backdrop-blur-md transition-all flex items-center gap-1.5 whitespace-nowrap border",
-              hovered
-                ? "bg-rose-950/95 border-rose-500 text-rose-200 ring-2 ring-rose-500/50 scale-110 z-50 px-3 py-1.5"
-                : marker.hasHeatSpike || isSelected
-                ? "bg-rose-950/90 border-rose-500 text-rose-300 ring-2 ring-rose-500/40"
-                : "bg-black/90 border-neutral-700 text-white"
+              "cursor-pointer font-mono text-[11px] font-bold transition-all flex items-center justify-center select-none",
+              hovered || isSelected
+                ? "bg-black/95 border border-cyan-400 text-white shadow-2xl backdrop-blur-md px-3 py-1.5 rounded-xl scale-110 z-50 whitespace-nowrap"
+                : "p-0.5 rounded-full text-cyan-400 opacity-90 hover:opacity-100 scale-100"
             )}
             onMouseEnter={() => {
               setHovered(true);
@@ -189,21 +175,52 @@ function Marker({ marker, radius, isSelected, onClick, onHover }: MarkerProps) {
             }}
             onClick={() => onClick?.(marker)}
           >
-            <span className={cn("w-2 h-2 rounded-full", marker.hasHeatSpike || isSelected || hovered ? "bg-rose-500 animate-ping" : "bg-cyan-400")} />
-            
-            {/* Show ONLY Plane Icon + Callsign by default, expand on hover */}
-            <span>
-              {marker.isFlightMarker
-                ? hovered
-                  ? marker.label
-                  : `✈ ${marker.ticker || "FLIGHT"}`
-                : marker.label}
-            </span>
-
-            {marker.ticker && !marker.isFlightMarker && (
-              <span className={cn("text-[10px] px-1.5 py-0.5 rounded border", marker.hasHeatSpike ? "bg-rose-900 text-rose-200 border-rose-700" : "bg-slate-900 text-cyan-300 border-slate-700")}>
-                {marker.ticker}
-              </span>
+            {marker.isFlightMarker ? (
+              marker.nodeId?.startsWith("sea-") ? (
+                hovered || isSelected ? (
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping shrink-0" />
+                    <span className="text-emerald-300 font-bold">{marker.label || `🚢 ${marker.ticker}`}</span>
+                  </div>
+                ) : (
+                  <span className="text-emerald-400 text-xs hover:scale-125 transition-transform inline-block drop-shadow-[0_0_8px_rgba(52,211,153,0.9)]">
+                    🚢
+                  </span>
+                )
+              ) : (
+                hovered || isSelected ? (
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping shrink-0" />
+                    <span>{marker.label || `✈ ${marker.ticker}`}</span>
+                  </div>
+                ) : (
+                  <span className="text-cyan-400 text-xs hover:scale-125 transition-transform inline-block drop-shadow-[0_0_6px_rgba(56,189,248,0.8)]">
+                    ✈
+                  </span>
+                )
+              )
+            ) : (
+              marker.nodeId?.startsWith("US") || marker.nodeId?.endsWith("TM") || marker.nodeId?.endsWith("HG") || marker.nodeId?.endsWith("YO") ? (
+                hovered || isSelected ? (
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-amber-400 animate-ping shrink-0" />
+                    <span className="text-amber-200">{marker.label || `⚓ ${marker.nodeId} Sea Port`}</span>
+                  </div>
+                ) : (
+                  <span className="text-amber-400 text-xs font-bold hover:scale-150 transition-transform inline-block drop-shadow-[0_0_8px_rgba(251,191,36,0.9)]">
+                    ⚓
+                  </span>
+                )
+              ) : (
+                hovered || isSelected ? (
+                  <div className="flex items-center gap-1.5">
+                    <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping shrink-0" />
+                    <span className="text-rose-200">{marker.label || `${marker.nodeId} Airport`}</span>
+                  </div>
+                ) : (
+                  <span className="w-3 h-3 rounded-full bg-rose-500 border border-white shadow-[0_0_12px_rgba(244,63,94,1)] inline-block hover:scale-150 transition-transform" />
+                )
+              )
             )}
           </div>
         </Html>
@@ -330,7 +347,7 @@ function Scene({ markers, arcs = [], config, selectedNodeId, onMarkerClick, onMa
       <OrbitControls
         makeDefault
         enablePan={false}
-        enableZoom={true}
+        enableZoom={config.enableZoom !== undefined ? config.enableZoom : true}
         minDistance={2.2}
         maxDistance={12}
         rotateSpeed={0.3}

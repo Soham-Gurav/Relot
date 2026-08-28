@@ -11,7 +11,7 @@ export default function Navbar() {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
   const navItems = [
-    { name: "Landing", link: "/" },
+    { name: "Home", link: "/" },
     { name: "Cargo & Supply Chain", link: "/cargo" },
     { name: "Energy Grid", link: "/grid" },
     { name: "Stocks Analytics", link: "/stocks" },

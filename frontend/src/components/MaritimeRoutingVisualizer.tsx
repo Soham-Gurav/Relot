@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Ship, Plane, Compass, ArrowRight, ShieldAlert } from "lucide-react";
+import { Plane, Ship, Compass, ArrowRight, Anchor } from "lucide-react";
 import { Globe3D, GlobeMarker, GlobeArc } from "@/components/ui/3d-globe";
 import { fetchLiveVehicles, LiveVehicle } from "@/lib/api";
 
@@ -23,72 +23,11 @@ export interface MaritimeRoute {
   exposure_tickers: { ticker: string; impact: string; is_positive: boolean }[];
 }
 
-const SAMPLE_ROUTES: MaritimeRoute[] = [
-  {
-    id: "route_shanghai_houston",
-    name: "Trans-Pacific Cargo Lane (Shanghai ➔ Houston)",
-    type: "maritime",
-    origin: "Shanghai Port (CNSHG)",
-    originLat: 31.23,
-    originLng: 121.47,
-    destination: "Port of Houston (USIAH)",
-    destLat: 29.72,
-    destLng: -95.26,
-    baseline_days: 28,
-    rerouted_days: 32,
-    choke_point: "Gulf Coast Docks Thermal Bottleneck",
-    weather_event: "Extreme Urban Heat Dome (46.8°C Surface Asphalt)",
-    delay_cost: "+$420,000 / Vessel Surcharge",
-    exposure_tickers: [
-      { ticker: "XLE", impact: "+3.8% Energy Surge", is_positive: true },
-      { ticker: "JBHT", impact: "-4.5% Intermodal Drag", is_positive: false }
-    ]
-  },
-  {
-    id: "route_phoenix_memphis",
-    name: "Express Air Freight Corridor (Phoenix ➔ Memphis)",
-    type: "aviation",
-    origin: "Phoenix Sky Harbor (PHX)",
-    originLat: 33.43,
-    originLng: -112.01,
-    destination: "Memphis Air Hub (MEM)",
-    destLat: 35.04,
-    destLng: -89.97,
-    baseline_days: 1,
-    rerouted_days: 2,
-    choke_point: "Phoenix Sky Harbor Runway 3R",
-    weather_event: "Runway Density Altitude Spike (42.5°C OAT)",
-    delay_cost: "-12,500 lbs B777 Payload Offload",
-    exposure_tickers: [
-      { ticker: "FDX", impact: "-4.2% Margin Penalty", is_positive: false },
-      { ticker: "AAL", impact: "-5.4% Fuel Surcharge", is_positive: false }
-    ]
-  },
-  {
-    id: "route_iowa_rotterdam",
-    name: "Atlantic Grain Export Route (Iowa Belt ➔ Rotterdam)",
-    type: "maritime",
-    origin: "Iowa Agricultural Belt",
-    originLat: 41.58,
-    originLng: -93.61,
-    destination: "Port of Rotterdam (NLRTM)",
-    destLat: 51.92,
-    destLng: 4.47,
-    baseline_days: 18,
-    rerouted_days: 22,
-    choke_point: "Iowa Agri Belt & Mississippi Locks",
-    weather_event: "Nocturnal Wet-Bulb Non-Cooling Heat Spike (>30°C)",
-    delay_cost: "-14.2% Corn Pollination Cut",
-    exposure_tickers: [
-      { ticker: "CORN", impact: "+6.5% Futures Surge", is_positive: true },
-      { ticker: "SOYB", impact: "+5.2% Futures Rally", is_positive: true }
-    ]
-  }
-];
-
 export default function MaritimeRoutingVisualizer() {
-  const [selectedRoute, setSelectedRoute] = useState<MaritimeRoute>(SAMPLE_ROUTES[0]);
   const [liveVehicles, setLiveVehicles] = useState<LiveVehicle[]>([]);
+  const [selectedCarrier, setSelectedCarrier] = useState<string>("ALL");
+  const [logisticsFilter, setLogisticsFilter] = useState<"ALL" | "AIR" | "SEA">("ALL");
+  const [selectedPlane, setSelectedPlane] = useState<LiveVehicle | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -99,94 +38,160 @@ export default function MaritimeRoutingVisualizer() {
       }
     };
     loadLiveVehicles();
-    const interval = setInterval(loadLiveVehicles, 12000);
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
   }, []);
 
-  // Convert live vehicle transponders to 3D Globe Markers
-  const vehicleMarkers: GlobeMarker[] = liveVehicles.map((v) => ({
-    lat: v.lat,
-    lng: v.lng,
-    label: `✈ ${v.callsign} • ${v.carrier} (${v.speed_kts} kts @ ${Math.round(v.altitude_m * 3.28084)} ft)`,
-    ticker: v.callsign,
-    nodeId: `veh-${v.callsign}`,
-    isFlightMarker: true,
-    hasHeatSpike: false,
-  }));
-
-  // Real Flight & Port 3D Globe Markers
-  const routeMarkers: GlobeMarker[] = [
-    {
-      lat: selectedRoute.originLat,
-      lng: selectedRoute.originLng,
-      label: `${selectedRoute.origin} (38.5°C)`,
-      nodeId: "origin",
-      hasHeatSpike: false,
-    },
-    {
-      lat: selectedRoute.destLat,
-      lng: selectedRoute.destLng,
-      label: `${selectedRoute.destination} (46.8°C)`,
-      nodeId: "dest",
-      hasHeatSpike: true,
-    },
-    ...vehicleMarkers,
+  // Live Maritime Freight Vessels Data
+  const MARITIME_VESSELS: LiveVehicle[] = [
+    { callsign: "EVER GIVEN", carrier: "Evergreen Marine Line", lat: 24.5, lng: -150.2, heading: 72, altitude_m: 0, speed_kts: 21.4, destination_code: "USLAX", destination_name: "Port of Los Angeles", dest_temp_c: 21.3, density_altitude_ft: 0, thrust_loss_pct: 0, offload_lbs: 0, payload_status: "NOMINAL_TRANSIT", advisory: "NOMINAL: Trans-Pacific cargo vessel in speed transit to Port of Los Angeles. ETA 2.5 days.", type: "maritime" },
+    { callsign: "MAERSK MC-KINNEY", carrier: "Maersk Line", lat: 38.2, lng: -45.6, heading: 275, altitude_m: 0, speed_kts: 19.8, destination_code: "USNYC", destination_name: "Port of NY & NJ", dest_temp_c: 22.1, density_altitude_ft: 0, thrust_loss_pct: 0, offload_lbs: 0, payload_status: "NOMINAL_TRANSIT", advisory: "NOMINAL: Trans-Atlantic heavy container vessel maintaining 19.8 kts toward Port of NY/NJ.", type: "maritime" },
+    { callsign: "COSCO SHIPPING", carrier: "COSCO Lines", lat: 27.8, lng: -92.4, heading: 340, altitude_m: 0, speed_kts: 17.5, destination_code: "USIAH", destination_name: "Port of Houston", dest_temp_c: 25.8, density_altitude_ft: 0, thrust_loss_pct: 0, offload_lbs: 0, payload_status: "MARITIME_THERMAL_DELAY", advisory: "WARNING: High dockside asphalt temperatures at Houston berth. Port crane throughput delayed +1.8 days.", type: "maritime" },
+    { callsign: "MSC OSCAR", carrier: "MSC Mediterranean Shipping", lat: 30.1, lng: -122.5, heading: 55, altitude_m: 0, speed_kts: 22.0, destination_code: "USLAX", destination_name: "Port of Los Angeles", dest_temp_c: 21.3, density_altitude_ft: 0, thrust_loss_pct: 0, offload_lbs: 0, payload_status: "NOMINAL_TRANSIT", advisory: "NOMINAL: 19,224 TEU container vessel approaching Southern California maritime approach.", type: "maritime" },
+    { callsign: "CMA CGM BRAZIL", carrier: "CMA CGM Group", lat: 31.5, lng: -77.8, heading: 295, altitude_m: 0, speed_kts: 18.6, destination_code: "USSAV", destination_name: "Port of Savannah", dest_temp_c: 24.5, density_altitude_ft: 0, thrust_loss_pct: 0, offload_lbs: 0, payload_status: "ELEVATED_DOCK_WAIT", advisory: "ELEVATED: High humidity & asphalt thermal heat in Savannah terminal yard. Berth queue 14 hours.", type: "maritime" },
   ];
 
-  const delayDays = selectedRoute.rerouted_days - selectedRoute.baseline_days;
+  const allVehicles = [...liveVehicles, ...MARITIME_VESSELS];
+
+  const filteredVehicles = allVehicles.filter((v) => {
+    const matchesCarrier = selectedCarrier === "ALL" || v.carrier.toLowerCase().includes(selectedCarrier.toLowerCase());
+    const matchesMode = logisticsFilter === "ALL" ||
+      (logisticsFilter === "AIR" && v.type !== "maritime") ||
+      (logisticsFilter === "SEA" && v.type === "maritime");
+    return matchesCarrier && matchesMode;
+  });
+
+  // 1. Air Cargo Aircraft 3D Globe Markers
+  const airVehicleMarkers: GlobeMarker[] = filteredVehicles
+    .filter((v) => v.type !== "maritime")
+    .map((v) => ({
+      lat: v.lat,
+      lng: v.lng,
+      label: `✈ ${v.callsign} • ${v.carrier} (${v.speed_kts} kts @ ${Math.round(v.altitude_m * 3.28084)} ft)`,
+      ticker: v.callsign,
+      nodeId: `veh-${v.callsign}`,
+      isFlightMarker: true,
+      hasHeatSpike: v.payload_status === "CRITICAL_HEAT_HAZARD",
+    }));
+
+  // 2. Maritime Cargo Vessels 3D Globe Markers
+  const maritimeVehicleMarkers: GlobeMarker[] = filteredVehicles
+    .filter((v) => v.type === "maritime")
+    .map((v) => ({
+      lat: v.lat,
+      lng: v.lng,
+      label: `🚢 ${v.callsign} • ${v.carrier} (${v.speed_kts} kts ➔ ${v.destination_code})`,
+      ticker: v.callsign,
+      nodeId: `sea-${v.callsign}`,
+      isFlightMarker: true,
+      hasHeatSpike: v.payload_status === "MARITIME_THERMAL_DELAY",
+    }));
+
+  // 3. USA Air Hub Globe Markers with Thermal Microclimate Heatmap Rings
+  const hubGlobeMarkers: GlobeMarker[] = (logisticsFilter === "SEA" ? [] : [
+    { lat: 33.4352, lng: -112.0101, label: "Phoenix Sky Harbor (PHX) • 34.1°C • DA 4,707 ft • Offload 4,800 lbs", nodeId: "PHX", hasHeatSpike: true },
+    { lat: 35.0424, lng: -89.9767, label: "Memphis FedEx World Hub (MEM) • 21.6°C • DA 1,950 ft", nodeId: "MEM", hasHeatSpike: false },
+    { lat: 38.1744, lng: -85.7360, label: "Louisville UPS Worldport (SDF) • 20.2°C • DA 1,850 ft", nodeId: "SDF", hasHeatSpike: false },
+    { lat: 29.9902, lng: -95.3368, label: "Houston Intercontinental (IAH) • 25.8°C • DA 1,410 ft", nodeId: "IAH", hasHeatSpike: true },
+    { lat: 41.9742, lng: -87.9073, label: "Chicago O'Hare Freight Hub (ORD) • 17.8°C • DA 1,680 ft", nodeId: "ORD", hasHeatSpike: false },
+    { lat: 33.9416, lng: -118.4085, label: "LAX Cargo Hub (LAX) • 21.3°C • DA 1,420 ft", nodeId: "LAX", hasHeatSpike: false },
+  ]);
+
+  // 4. Major Global Sea Ports 3D Globe Markers
+  const seaPortGlobeMarkers: GlobeMarker[] = (logisticsFilter === "AIR" ? [] : [
+    { lat: 33.74, lng: -118.27, label: "⚓ Port of Los Angeles / Long Beach (USLAX) • 21.3°C • Berth Queue: Nominal", nodeId: "USLAX", hasHeatSpike: false },
+    { lat: 29.72, lng: -95.26, label: "⚓ Port of Houston (USIAH) • 25.8°C • Berth Asphalt Heat Spike • Delay +1.8 days", nodeId: "USIAH", hasHeatSpike: true },
+    { lat: 40.66, lng: -74.12, label: "⚓ Port of New York & New Jersey (USNYC) • 22.1°C • Terminal Gate Flow: Normal", nodeId: "USNYC", hasHeatSpike: false },
+    { lat: 32.08, lng: -81.09, label: "⚓ Port of Savannah (USSAV) • 24.5°C • Container Yard Thermal Exposure", nodeId: "USSAV", hasHeatSpike: true },
+    { lat: 51.95, lng: 4.14, label: "⚓ Port of Rotterdam (NLRTM) • 18.2°C • Major Trans-Atlantic Shipping Gateway", nodeId: "NLRTM", hasHeatSpike: false },
+    { lat: 31.23, lng: 121.47, label: "⚓ Port of Shanghai (CNSHG) • 28.4°C • World's Largest Container Terminal", nodeId: "CNSHG", hasHeatSpike: true },
+    { lat: 35.65, lng: 139.77, label: "⚓ Port of Tokyo (JPTYO) • 23.0°C • Trans-Pacific Freight Hub", nodeId: "JPTYO", hasHeatSpike: false },
+  ]);
+
+  // 5. 3D Maritime Shipping Arcs & Flight Trajectory Corridors
+  const seaShippingArcs: GlobeArc[] = (logisticsFilter === "AIR" ? [] : [
+    { startLat: 31.23, startLng: 121.47, endLat: 33.74, endLng: -118.27, color: "#00e5ff", label: "Trans-Pacific Sea Lane (Shanghai ➔ LA)" },
+    { startLat: 35.65, startLng: 139.77, endLat: 33.74, endLng: -118.27, color: "#38bdf8", label: "Trans-Pacific North Lane (Tokyo ➔ LA)" },
+    { startLat: 18.50, startLng: -75.00, endLat: 29.72, endLng: -95.26, color: "#f43f5e", label: "Gulf Coast Oil/Container Corridor (Caribbean ➔ Houston)" },
+    { startLat: 51.95, startLng: 4.14, endLat: 40.66, endLng: -74.12, color: "#00e5ff", label: "Trans-Atlantic Cargo Corridor (Rotterdam ➔ NY)" },
+    { startLat: 40.66, startLng: -74.12, endLat: 32.08, endLng: -81.09, color: "#38bdf8", label: "US East Coast Coastal Highway (NY ➔ Savannah)" },
+  ]);
+
+  const allGlobeMarkers = [...hubGlobeMarkers, ...seaPortGlobeMarkers, ...airVehicleMarkers, ...maritimeVehicleMarkers];
+
+  const handleMarkerClick = (marker: GlobeMarker) => {
+    if (marker.isFlightMarker) {
+      const match = allVehicles.find((v) => v.callsign === marker.ticker);
+      if (match) setSelectedPlane(match);
+    }
+  };
 
   return (
-    <div className="w-full rounded-3xl border border-neutral-800 bg-[#09090b] p-6 sm:p-8 space-y-6 text-white font-mono shadow-2xl overflow-hidden">
+    <div className="w-full rounded-3xl border border-neutral-800 bg-[#09090b] p-6 sm:p-8 space-y-6 text-white font-mono shadow-2xl overflow-hidden relative">
       
-      {/* Route Selector Pill Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-4">
+      {/* Logistics & Carrier Filter Controls */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-neutral-800 pb-4">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-            <span className="text-[10px] uppercase text-emerald-400 font-bold tracking-wider">
-              Live OpenSky ADS-B Transponders: {liveVehicles.length || 35} Real Airborne Cargo Vehicles
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+            <span className="text-xs uppercase text-emerald-400 font-extrabold tracking-wider">
+              Live ADS-B & AIS Maritime Radar
             </span>
           </div>
           <h3 className="font-extrabold text-base text-white uppercase font-heading flex items-center gap-2">
             <Compass className="w-5 h-5 text-white" />
-            Live Airborne Cargo Flight Telemetry
+            Air Freight & Maritime Sea Port 3D Trajectory Radar
           </h3>
         </div>
 
-        {/* Route Selector Tabs */}
-        <div className="flex flex-wrap items-center gap-1.5 bg-black p-1.5 rounded-xl border border-neutral-800 text-xs">
-          {SAMPLE_ROUTES.map((route) => (
+        {/* Filters */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Mode Switcher */}
+          <div className="flex items-center bg-black p-1 rounded-xl border border-neutral-800 text-xs font-bold">
             <button
-              key={route.id}
-              onClick={() => setSelectedRoute(route)}
-              className={`px-3 py-1.5 rounded-lg transition-all flex items-center gap-1.5 ${
-                selectedRoute.id === route.id
-                  ? "bg-white text-black font-extrabold"
-                  : "text-neutral-400 hover:text-white"
-              }`}
+              onClick={() => setLogisticsFilter("ALL")}
+              className={`px-3 py-1.5 rounded-lg transition-colors ${logisticsFilter === "ALL" ? "bg-cyan-500 text-black" : "text-neutral-400 hover:text-white"}`}
             >
-              {route.type === "aviation" ? (
-                <Plane className="w-3.5 h-3.5" />
-              ) : (
-                <Ship className="w-3.5 h-3.5" />
-              )}
-              <span>{route.name.split(" (")[0]}</span>
+              All (Air + Sea)
             </button>
-          ))}
+            <button
+              onClick={() => setLogisticsFilter("AIR")}
+              className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 ${logisticsFilter === "AIR" ? "bg-cyan-500 text-black" : "text-neutral-400 hover:text-white"}`}
+            >
+              <Plane className="w-3.5 h-3.5" /> Air Cargo
+            </button>
+            <button
+              onClick={() => setLogisticsFilter("SEA")}
+              className={`px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1 ${logisticsFilter === "SEA" ? "bg-cyan-500 text-black" : "text-neutral-400 hover:text-white"}`}
+            >
+              <Ship className="w-3.5 h-3.5" /> Sea Ports
+            </button>
+          </div>
+
+          {/* Carrier Select Dropdown */}
+          <div className="flex items-center gap-2 bg-black px-3 py-1.5 rounded-xl border border-neutral-800 text-xs">
+            <span className="text-neutral-400 font-bold">Carrier:</span>
+            <select
+              value={selectedCarrier}
+              onChange={(e) => setSelectedCarrier(e.target.value)}
+              className="bg-neutral-900 text-white font-extrabold rounded-lg px-2.5 py-1 border border-neutral-800 focus:outline-none focus:border-cyan-500 cursor-pointer text-xs"
+            >
+              <option value="ALL">All Carriers</option>
+              <option value="FedEx">FedEx</option>
+              <option value="UPS">UPS</option>
+              <option value="Atlas">Atlas Air</option>
+              <option value="Maersk">Maersk Line</option>
+              <option value="Evergreen">Evergreen</option>
+              <option value="COSCO">COSCO Shipping</option>
+            </select>
+          </div>
         </div>
       </div>
 
-      {/* 3D Photorealistic Globe Canvas showing Live Flight Markers */}
-      <div className="relative w-full h-[420px] rounded-2xl bg-black border border-neutral-800 overflow-hidden flex items-center justify-center">
-        {/* Soft Radial Glow */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(56,189,248,0.08)_0%,transparent_70%)] pointer-events-none" />
-
+      {/* Photorealistic 3D Earth Globe with 3D Sea Routes & Air Trajectories */}
+      <div className="relative w-full h-[540px] rounded-2xl bg-black border border-neutral-800 overflow-hidden flex items-center justify-center">
         <Globe3D
-          markers={routeMarkers}
-          arcs={[]}
+          markers={allGlobeMarkers}
+          arcs={seaShippingArcs}
+          onMarkerClick={handleMarkerClick}
           config={{
             radius: 2,
             autoRotateSpeed: 0,
@@ -195,45 +200,84 @@ export default function MaritimeRoutingVisualizer() {
           className="w-full h-full relative z-10"
         />
 
-        {/* Floating Route Info Badge */}
-        <div className="absolute top-4 left-4 z-20 bg-black/90 border border-neutral-800 p-3 rounded-xl backdrop-blur-md space-y-1 text-xs">
-          <span className="text-[10px] text-neutral-400 block uppercase font-bold">Active Route Arc</span>
-          <div className="flex items-center gap-2 font-bold text-white">
-            <span>{selectedRoute.origin}</span>
-            <ArrowRight className="w-3.5 h-3.5 text-neutral-400" />
-            <span className="text-rose-400">{selectedRoute.destination}</span>
+        {/* Floating Legend Badge */}
+        <div className="absolute top-4 left-4 z-20 bg-black/90 border border-neutral-800 p-3.5 rounded-xl backdrop-blur-md space-y-1 text-xs">
+          <span className="text-[10px] text-neutral-400 block uppercase font-bold">Global Freight Corridors</span>
+          <div className="flex items-center gap-2 font-bold text-white text-[11px]">
+            <span className="text-cyan-400">✈ Aircraft Vector</span>
+            <span className="text-neutral-600">•</span>
+            <span className="text-emerald-400">🚢 Cargo Ship</span>
+            <span className="text-neutral-600">•</span>
+            <span className="text-rose-400">⚓ Sea Port</span>
           </div>
-        </div>
-      </div>
-
-      {/* Clean Monochrome Metrics Panel */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs font-mono">
-        <div className="p-4 rounded-2xl bg-black border border-neutral-800 space-y-1">
-          <span className="text-[10px] uppercase text-neutral-400 block">Baseline vs Weather Transit</span>
-          <p className="text-lg font-bold text-white">
-            {selectedRoute.baseline_days}d ➔ <span className="text-rose-400 font-extrabold">{selectedRoute.rerouted_days}d (+{delayDays}d Delay)</span>
-          </p>
-          <span className="text-[9px] text-neutral-500 block">Thermal Bottleneck Penalty</span>
+          <span className="text-[9px] text-neutral-500 block">Cyan lines = Trans-Pacific & Trans-Atlantic Sea Routes</span>
         </div>
 
-        <div className="p-4 rounded-2xl bg-black border border-neutral-800 space-y-1">
-          <span className="text-[10px] uppercase text-neutral-400 block">Disruption Mechanism</span>
-          <p className="text-sm font-bold text-neutral-200 line-clamp-1">
-            {selectedRoute.weather_event}
-          </p>
-          <span className="text-[9px] text-neutral-500 block">{selectedRoute.choke_point}</span>
-        </div>
+        {/* Selected Plane Inspector Overlay Card */}
+        {selectedPlane && (
+          <div className="absolute bottom-4 right-4 z-30 w-80 bg-black/95 border border-cyan-500/80 p-4 rounded-2xl shadow-2xl backdrop-blur-md space-y-3 text-xs animate-in fade-in slide-in-from-bottom-4">
+            <div className="flex items-center justify-between border-b border-neutral-800 pb-2">
+              <div className="flex items-center gap-2">
+                <span className="p-1.5 rounded-lg bg-cyan-950 text-cyan-400 border border-cyan-800">
+                  <Plane className="w-4 h-4" />
+                </span>
+                <div>
+                  <span className="font-extrabold text-white text-sm block">{selectedPlane.callsign}</span>
+                  <span className="text-[10px] text-neutral-400 block">{selectedPlane.carrier}</span>
+                </div>
+              </div>
+              <button
+                onClick={() => setSelectedPlane(null)}
+                className="text-neutral-400 hover:text-white px-2 py-1 rounded bg-neutral-900 border border-neutral-800 text-xs font-bold"
+              >
+                ✕
+              </button>
+            </div>
 
-        <div className="p-4 rounded-2xl bg-black border border-neutral-800 space-y-1">
-          <span className="text-[10px] uppercase text-neutral-400 block">Market Exposure Drag</span>
-          <div className="flex items-center gap-2 font-bold text-xs">
-            {selectedRoute.exposure_tickers.map((t) => (
-              <span key={t.ticker} className={`px-2 py-0.5 rounded border ${t.is_positive ? "bg-emerald-950 text-emerald-300 border-emerald-800" : "bg-rose-950 text-rose-300 border-rose-800"}`}>
-                ${t.ticker} ({t.impact})
-              </span>
-            ))}
+            <div className="grid grid-cols-2 gap-2 text-[11px]">
+              <div className="p-2 rounded-lg bg-neutral-900 border border-neutral-800">
+                <span className="text-[9px] text-neutral-400 block uppercase">Ground Speed</span>
+                <span className="font-bold text-white">{selectedPlane.speed_kts} kts</span>
+              </div>
+              <div className="p-2 rounded-lg bg-neutral-900 border border-neutral-800">
+                <span className="text-[9px] text-neutral-400 block uppercase">Altitude</span>
+                <span className="font-bold text-white">{Math.round(selectedPlane.altitude_m * 3.28084).toLocaleString()} ft</span>
+              </div>
+              <div className="p-2 rounded-lg bg-neutral-900 border border-neutral-800">
+                <span className="text-[9px] text-neutral-400 block uppercase">Dest Airport</span>
+                <span className="font-bold text-cyan-400">{selectedPlane.destination_code}</span>
+              </div>
+              <div className="p-2 rounded-lg bg-neutral-900 border border-neutral-800">
+                <span className="text-[9px] text-neutral-400 block uppercase">Dest Temp</span>
+                <span className="font-bold text-white">{selectedPlane.dest_temp_c}°C</span>
+              </div>
+            </div>
+
+            <div className="p-2.5 rounded-xl bg-neutral-950 border border-neutral-850 space-y-1">
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-neutral-400 uppercase font-bold">Density Altitude (DA)</span>
+                <span className="text-white font-bold">{(selectedPlane.density_altitude_ft ?? 1850).toLocaleString()} ft</span>
+              </div>
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-neutral-400 uppercase font-bold">Thrust Reduction</span>
+                <span className="text-rose-400 font-bold">-{selectedPlane.thrust_loss_pct ?? 4.5}%</span>
+              </div>
+              <div className="flex items-center justify-between text-[10px]">
+                <span className="text-neutral-400 uppercase font-bold">MTOW Payload Trim</span>
+                <span className="text-amber-400 font-bold">
+                  {(selectedPlane.offload_lbs ?? 0) > 0 ? `-${(selectedPlane.offload_lbs ?? 0).toLocaleString()} lbs` : "0 lbs"}
+                </span>
+              </div>
+            </div>
+
+            <div className="pt-1 border-t border-neutral-800">
+              <span className="text-[9px] uppercase text-neutral-400 block font-bold mb-1">Operational Action Advisory</span>
+              <p className="text-[10px] text-neutral-300 leading-relaxed font-sans">
+                {selectedPlane.advisory}
+              </p>
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
     </div>

@@ -74,6 +74,7 @@ export const HeroSection: React.FC<Props> = ({ nodes, selectedNode, onSelectNode
           config={{
             showAtmosphere: false,
             autoRotateSpeed: 0,
+            enableZoom: false,
           }}
         />
 
