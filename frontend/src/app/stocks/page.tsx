@@ -30,47 +30,34 @@ export default function StockMatrixPage() {
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 pt-28 pb-16 space-y-12 z-30 relative">
         
         {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-white/10 pb-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-xs text-neutral-400 font-bold uppercase tracking-widest">
-              <BarChart3 className="w-4 h-4 text-white" />
-              Enterprise Telemetry Terminal 03
-            </div>
-            <h1 className="text-3xl sm:text-5xl font-black uppercase font-heading text-white tracking-tight">
-              Stock Dependency & Seasonality Radar
-            </h1>
-            <p className="text-xs sm:text-sm text-neutral-400 font-mono">
-              16 Heat-Dependent Assets across Aviation, Energy, Agriculture, and Freight with FortyGuard Thermal Alpha vectors and 3-Year Technical Seasonality.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3 bg-neutral-950 p-3 rounded-2xl border border-white/10 text-xs">
-            <Flame className="w-5 h-5 text-white animate-pulse" />
-            <div>
-              <span className="text-neutral-400 block text-[10px] uppercase">Active Asset Coverage</span>
-              <span className="font-extrabold text-white">16 Sector Equities & ETFs</span>
-            </div>
-          </div>
+        <div className="border-b border-white/10 pb-6 space-y-2">
+          <h1 className="text-3xl sm:text-5xl font-black uppercase font-heading text-white tracking-tight">
+            Stock Dependency & Seasonality Radar
+          </h1>
+          <p className="text-xs sm:text-sm text-neutral-400 font-mono">
+            16 Heat-Dependent Assets across Aviation, Energy, Agriculture, and Freight with FortyGuard Thermal Alpha vectors and 3-Year Technical Seasonality.
+          </p>
         </div>
 
-        {/* Filters & Search Toolbar */}
-        <div className="glass-panel p-4 rounded-2xl border border-white/10 bg-neutral-950/90 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs">
+        {/* Filters & Search Toolbar with Sector Dropdown */}
+        <div className="glass-panel p-4 rounded-2xl border border-white/10 bg-neutral-950/90 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs font-mono">
           
-          {/* Sector Buttons */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            {sectors.map((sec) => (
-              <button
-                key={sec}
-                onClick={() => setSelectedSector(sec)}
-                className={`px-3 py-1.5 rounded-xl font-bold transition-all ${
-                  selectedSector === sec
-                    ? "bg-white text-black font-extrabold"
-                    : "bg-black text-neutral-400 border border-white/10 hover:text-white"
-                }`}
-              >
-                {sec === "ALL" ? "All 16 Assets" : sec.split(" & ")[0]}
-              </button>
-            ))}
+          {/* Sector Dropdown Menu */}
+          <div className="flex items-center gap-3">
+            <span className="text-neutral-400 font-bold uppercase text-[10px] tracking-wider">
+              Filter by Sector:
+            </span>
+            <select
+              value={selectedSector}
+              onChange={(e) => setSelectedSector(e.target.value)}
+              className="bg-black border border-white/20 rounded-xl px-3.5 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400 cursor-pointer hover:border-white/40 transition-colors"
+            >
+              {sectors.map((sec) => (
+                <option key={sec} value={sec} className="bg-black text-white">
+                  {sec === "ALL" ? "All 16 Assets (Every Sector)" : sec}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Search Bar */}
@@ -81,7 +68,7 @@ export default function StockMatrixPage() {
               placeholder="Search ticker or asset..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full bg-black border border-white/20 rounded-xl pl-9 pr-4 py-2 text-xs font-mono text-white focus:outline-none focus:border-white"
+              className="w-full bg-black border border-white/20 rounded-xl pl-9 pr-4 py-2 text-xs font-mono text-white focus:outline-none focus:border-cyan-400"
             />
           </div>
 

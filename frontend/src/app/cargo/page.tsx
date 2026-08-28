@@ -365,7 +365,7 @@ export default function CargoTerminal() {
                       {v.destination_code || "PHX"} ({v.dest_temp_c || 42.5}°C)
                     </td>
                     <td className="py-3.5 px-4 font-bold">
-                      <span className={`px-2.5 py-1 rounded text-[10px] border uppercase ${
+                      <span className={`px-2.5 py-1 rounded text-[10px] border uppercase whitespace-nowrap inline-block font-extrabold ${
                         v.payload_status === "CRITICAL_HEAT_HAZARD"
                           ? "bg-rose-950 text-rose-300 border-rose-800"
                           : v.payload_status === "ELEVATED_PAYLOAD_RESTRICTION"
@@ -373,9 +373,9 @@ export default function CargoTerminal() {
                           : "bg-emerald-950 text-emerald-300 border-emerald-800"
                       }`}>
                         {v.payload_status === "CRITICAL_HEAT_HAZARD"
-                          ? "Critical Offload Req"
+                          ? "Critical Offload"
                           : v.payload_status === "ELEVATED_PAYLOAD_RESTRICTION"
-                          ? "Elevated Restraint"
+                          ? "Elevated Risk"
                           : "Nominal Lift"}
                       </span>
                     </td>

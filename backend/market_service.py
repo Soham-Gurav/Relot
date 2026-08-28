@@ -13,7 +13,7 @@ STOCK_PROFILES = {
         "optimal_lag": "+4 Days",
         "optimal_lag_days": 4,
         "heat_sensitivity_score": 88,
-        "mechanism": "High ambient temperatures at air cargo hubs (like Phoenix Sky Harbor) reduce air density (Density Altitude). At 42°C+, cargo planes like Boeing 777-F must offload up to 10,000+ lbs of payload or fly with reduced fuel. This creates express freight backlogs, operating cost spikes, and margin compression that hits Wall Street 4 days later.",
+        "mechanism": "Air temperature variations at regional cargo hubs alter density altitude (DA), influencing aircraft takeoff weight limits, fuel burn, and intermodal freight throughput.",
         "52w_high": 345.50,
         "52w_low": 240.20,
         "market_cap": "$82.4B",
@@ -22,9 +22,9 @@ STOCK_PROFILES = {
         "corr_1y": -0.214,
         "corr_3y": -0.198,
         "historical_insights": [
-            "June 2021 Heatwave: 44°C Phoenix runway temp resulted in 3-day freight delay alert; FDX stock dipped -4.8% over +4 days.",
-            "July 2023 Heatwave: Extended 18-day desert heatwave caused 12 cargo offload incidents, correlating with -6.2% stock pullback.",
-            "August 2025 Cooling Phase: As runway temps dropped below 30°C, FDX experienced +8.5% recovery rally."
+            "June 2021: 44°C Phoenix runway temp resulted in cargo weight restrictions and 4-day lag offset.",
+            "July 2023: Extended desert heatwave caused cargo offload adjustments across major hub routes.",
+            "August 2025: Temperature normalization correlated with freight throughput stabilization."
         ]
     },
     "DAL": {
@@ -36,7 +36,7 @@ STOCK_PROFILES = {
         "optimal_lag": "+6 Days",
         "optimal_lag_days": 6,
         "heat_sensitivity_score": 78,
-        "mechanism": "Extreme heatwave conditions force passenger flight re-routing, passenger bumping, and higher fuel burn penalties on desert departure routes.",
+        "mechanism": "Elevated ambient air temperatures at high-altitude or desert airports increase takeoff density altitude, affecting aircraft fuel efficiency and payload limits.",
         "52w_high": 88.40,
         "52w_low": 48.10,
         "market_cap": "$53.8B",
@@ -45,8 +45,8 @@ STOCK_PROFILES = {
         "corr_1y": -0.158,
         "corr_3y": -0.142,
         "historical_insights": [
-            "Summer 2022: Southwest & Phoenix heat spikes forced passenger weight limits; DAL experienced -3.5% price pullback 6 days post-wave.",
-            "July 2024: Peak heat index in Atlanta and Dallas hubs caused $14M in fuel burn surcharges."
+            "Summer 2022: Southwest desert heat spikes required weight-management adjustments.",
+            "July 2024: High temperature indices in southern hubs correlated with elevated fuel burn metrics."
         ]
     },
     "AAL": {
@@ -58,7 +58,7 @@ STOCK_PROFILES = {
         "optimal_lag": "+6 Days",
         "optimal_lag_days": 6,
         "heat_sensitivity_score": 82,
-        "mechanism": "High density altitude in Southwest US hubs restricts max takeoff gross weight, leading to baggage offloading and flight cancellation spikes.",
+        "mechanism": "High density altitude in desert departure hubs restricts maximum takeoff gross weight, requiring operational adjustments on extreme weather days.",
         "52w_high": 16.80,
         "52w_low": 10.20,
         "market_cap": "$9.1B",
@@ -85,7 +85,7 @@ STOCK_PROFILES = {
             "spike_days_count": 42
         },
         "historical_insights": [
-            "June 2021: Grounding of regional flights in Phoenix due to 48°C ambient heat led to 6-day stock decline of -5.4%."
+            "June 2021: 48°C ambient heat in Phoenix led to regional flight dispatch weight limits."
         ]
     },
     "XLE": {
@@ -97,7 +97,7 @@ STOCK_PROFILES = {
         "optimal_lag": "+5 Days",
         "optimal_lag_days": 5,
         "heat_sensitivity_score": 76,
-        "mechanism": "Ground surface heat on shipping docks slows crane container handling and expands rail tracks near Houston refineries, causing 5-day export throughput lags.",
+        "mechanism": "Surface ground temperatures at refining and shipping port hubs influence cooling water efficiency and export terminal throughput.",
         "52w_high": 72.50,
         "52w_low": 58.10,
         "market_cap": "$38.2B",
@@ -106,7 +106,7 @@ STOCK_PROFILES = {
         "corr_1y": +0.211,
         "corr_3y": +0.194,
         "historical_insights": [
-            "August 2023: Texas Gulf Coast thermal surge slowed refinery cooling tower efficiency, spiking spot energy margins after 5 days."
+            "August 2023: Texas Gulf Coast thermal conditions influenced refinery cooling efficiency metrics."
         ]
     },
     "JBHT": {
@@ -118,7 +118,7 @@ STOCK_PROFILES = {
         "optimal_lag": "+3 Days",
         "optimal_lag_days": 3,
         "heat_sensitivity_score": 72,
-        "mechanism": "Asphalt temperatures above 45°C increase truck tire blowout rates and force driver rest breaks, slowing freight throughput across Texas corridors.",
+        "mechanism": "Highway surface temperatures affect commercial tire degradation rates and highway freight transit schedules across southern logistics corridors.",
         "52w_high": 210.00,
         "52w_low": 150.30,
         "market_cap": "$16.4B",
@@ -127,7 +127,7 @@ STOCK_PROFILES = {
         "corr_1y": -0.113,
         "corr_3y": -0.108,
         "historical_insights": [
-            "July 2024: Highway heat warnings across Interstate-10 correlated with a 3-day freight delivery lag and minor margin compression."
+            "July 2024: Highway heat warnings across southern freight corridors correlated with minor transit time adjustments."
         ]
     },
     "UAL": {
@@ -139,7 +139,7 @@ STOCK_PROFILES = {
         "optimal_lag": "+5 Days",
         "optimal_lag_days": 5,
         "heat_sensitivity_score": 80,
-        "mechanism": "Runway heat spikes at West Coast hubs increase fuel burn surcharges and density altitude takeoff restrictions.",
+        "mechanism": "Runway ambient temperature spikes increase density altitude takeoff limits and fuel consumption parameters across desert hubs.",
         "52w_high": 95.20,
         "52w_low": 38.10,
         "market_cap": "$31.4B",
@@ -148,7 +148,7 @@ STOCK_PROFILES = {
         "corr_1y": -0.162,
         "corr_3y": -0.151,
         "historical_insights": [
-            "August 2024: Desert heat dome forced passenger displacement across 14 flights."
+            "August 2024: High temperature indices led to payload management across desert departures."
         ]
     },
     "UPS": {
@@ -160,7 +160,7 @@ STOCK_PROFILES = {
         "optimal_lag": "+4 Days",
         "optimal_lag_days": 4,
         "heat_sensitivity_score": 85,
-        "mechanism": "Extreme air hub temperature spikes force package payload reductions on B767-300F and MD-11F flights.",
+        "mechanism": "Air freight hub temperature spikes require density altitude payload calculations on heavy freighter aircraft routes.",
         "52w_high": 158.40,
         "52w_low": 122.10,
         "market_cap": "$112.5B",
@@ -169,7 +169,7 @@ STOCK_PROFILES = {
         "corr_1y": -0.201,
         "corr_3y": -0.189,
         "historical_insights": [
-            "July 2023: Worldport feeder flight thermal offloading created express parcel delays."
+            "July 2023: Feeder air cargo hub thermal conditions required cargo weight distribution adjustments."
         ]
     },
     "NRG": {
@@ -181,7 +181,7 @@ STOCK_PROFILES = {
         "optimal_lag": "+1 Day",
         "optimal_lag_days": 1,
         "heat_sensitivity_score": 91,
-        "mechanism": "Texas Urban Heat Island surges drive residential AC load to record MW levels, spiking spot wholesale power revenues.",
+        "mechanism": "Regional heatwave conditions increase air conditioning electricity demand, elevating power generation dispatch rates.",
         "52w_high": 92.40,
         "52w_low": 35.80,
         "market_cap": "$18.2B",
@@ -190,7 +190,7 @@ STOCK_PROFILES = {
         "corr_1y": +0.362,
         "corr_3y": +0.341,
         "historical_insights": [
-            "August 2023: ERCOT record 85,000 MW load surge correlated with +12.4% NRG price rally."
+            "August 2023: ERCOT grid peak load demand correlated with increased power generation dispatch."
         ]
     },
     "VST": {
@@ -202,7 +202,7 @@ STOCK_PROFILES = {
         "optimal_lag": "+1 Day",
         "optimal_lag_days": 1,
         "heat_sensitivity_score": 93,
-        "mechanism": "Peaker plant dispatch during extreme summer heat domes generates high-margin spot power sales.",
+        "mechanism": "Summer power demand surges increase natural gas and solar power generation dispatch across regional electrical grids.",
         "52w_high": 142.10,
         "52w_low": 31.50,
         "market_cap": "$46.8B",
@@ -211,7 +211,7 @@ STOCK_PROFILES = {
         "corr_1y": +0.415,
         "corr_3y": +0.388,
         "historical_insights": [
-            "Summer 2024: Peak Texas heatwave driven AC demand triggered multi-week utility rally."
+            "Summer 2024: High electrical grid demand correlated with elevated power generation revenues."
         ]
     },
     "WEAT": {
@@ -223,7 +223,7 @@ STOCK_PROFILES = {
         "optimal_lag": "+0 Days (Immediate)",
         "optimal_lag_days": 0,
         "heat_sensitivity_score": 89,
-        "mechanism": "Drought and thermal soil stress in wheat belts drive immediate agricultural commodity futures spikes.",
+        "mechanism": "Soil moisture evaporation and surface temperature stress in wheat cultivation regions influence crop yield metrics.",
         "52w_high": 8.20,
         "52w_low": 5.10,
         "market_cap": "$85M",
@@ -232,7 +232,7 @@ STOCK_PROFILES = {
         "corr_1y": +0.298,
         "corr_3y": +0.274,
         "historical_insights": [
-            "July 2023: Heat dome over Midwest crop belt spiked WEAT futures +7.2%."
+            "July 2023: Soil thermal stress across agricultural belts influenced commodity futures trading."
         ]
     },
     "DE": {
@@ -244,7 +244,7 @@ STOCK_PROFILES = {
         "optimal_lag": "+5 Days",
         "optimal_lag_days": 5,
         "heat_sensitivity_score": 71,
-        "mechanism": "Agricultural thermal stress impacts farmer income expectations and equipment purchase cycles.",
+        "mechanism": "Agricultural growing conditions and seasonal weather trends influence farm equipment utilization and replacement demand.",
         "52w_high": 448.00,
         "52w_low": 340.20,
         "market_cap": "$114.2B",
@@ -253,7 +253,7 @@ STOCK_PROFILES = {
         "corr_1y": -0.105,
         "corr_3y": -0.096,
         "historical_insights": [
-            "Summer 2023: Prolonged Midwest heatwave impacted farm equipment order sentiment."
+            "Summer 2023: Seasonal agricultural conditions influenced heavy equipment demand patterns."
         ]
     },
     "UNP": {
@@ -265,7 +265,7 @@ STOCK_PROFILES = {
         "optimal_lag": "+4 Days",
         "optimal_lag_days": 4,
         "heat_sensitivity_score": 75,
-        "mechanism": "Asphalt and rail ground surface temperatures above 46°C trigger rail sun-kink speed restriction mandates.",
+        "mechanism": "Steel rail temperatures above safety thresholds trigger thermal expansion speed restrictions across rail freight corridors.",
         "52w_high": 258.50,
         "52w_low": 202.10,
         "market_cap": "$142.8B",
@@ -274,7 +274,7 @@ STOCK_PROFILES = {
         "corr_1y": -0.134,
         "corr_3y": -0.125,
         "historical_insights": [
-            "August 2023: Texas rail track thermal expansion forced 10 mph speed reductions across desert corridors."
+            "August 2023: Rail track surface heat led to speed management protocols across desert freight corridors."
         ]
     },
     "CORN": {
@@ -287,7 +287,7 @@ STOCK_PROFILES = {
         "optimal_lag_days": 0,
         "max_corr": 0.1447,
         "heat_sensitivity_score": 94,
-        "mechanism": "Nocturnal non-cooling (high nighttime 2m temperatures) in Iowa during July pollination prevents crop recovery. USDA crop condition reports instantly trigger commodity price spikes on Lag 0.",
+        "mechanism": "Nighttime minimum temperatures and cumulative heat units in major grain belts affect crop pollination and yield forecasts.",
         "52w_high": 24.50,
         "52w_low": 18.20,
         "market_cap": "$145M",
@@ -296,8 +296,8 @@ STOCK_PROFILES = {
         "corr_1y": +0.345,
         "corr_3y": +0.312,
         "historical_insights": [
-            "July 2021: Midwest heat dome caused overnight temps to stay above 28°C; CORN futures jumped +6.2% on the exact same day.",
-            "August 2023: Flash heat stress in Iowa drove +4.8% price surge on Lag 0."
+            "July 2021: Overnight minimum temperature anomalies influenced agricultural futures pricing.",
+            "August 2023: Mid-season weather condition reports impacted commodity trading metrics."
         ]
     },
     "SOYB": {
@@ -309,7 +309,7 @@ STOCK_PROFILES = {
         "optimal_lag": "+7 Days",
         "optimal_lag_days": 7,
         "heat_sensitivity_score": 85,
-        "mechanism": "Soybeans pod-fill later in August. Sustained weekly heat waves cause yield degradation that peaks over a 7-day cumulative window.",
+        "mechanism": "Late-summer thermal conditions and precipitation levels impact soybean pod-fill development and yield expectations.",
         "52w_high": 28.90,
         "52w_low": 24.10,
         "market_cap": "$88M",
@@ -318,7 +318,7 @@ STOCK_PROFILES = {
         "corr_1y": +0.215,
         "corr_3y": +0.198,
         "historical_insights": [
-            "August 2022: Sustained 10-day Midwest dry heat led to +7.4% soybean futures rally over a 7-day lag cycle."
+            "August 2022: Late-summer agricultural weather trends influenced soybean yield estimates over 7-day windows."
         ]
     },
     "UNG": {
@@ -330,7 +330,7 @@ STOCK_PROFILES = {
         "optimal_lag": "+0 Days (Immediate)",
         "optimal_lag_days": 0,
         "heat_sensitivity_score": 92,
-        "mechanism": "Urban Heat Island temperature spikes in Houston & Dallas drive massive AC electrical load. ERCOT engages natural gas peaker plants immediately, causing instant same-day spot price spikes.",
+        "mechanism": "Summer heatwave electricity demand drives natural gas power plant dispatch, affecting natural gas inventory drawdowns.",
         "52w_high": 18.20,
         "52w_low": 8.90,
         "market_cap": "$720M",
@@ -339,7 +339,7 @@ STOCK_PROFILES = {
         "corr_1y": +0.389,
         "corr_3y": +0.354,
         "historical_insights": [
-            "August 2023 ERCOT Grid Emergency: Houston heat index hit 46°C; UNG natural gas ETF spiked +8.9% on Lag 0 as power demand hit 85,000 MW record."
+            "August 2023: Regional peak power demand drove increased natural gas consumption for electricity generation."
         ]
     },
     "XLU": {
@@ -351,7 +351,7 @@ STOCK_PROFILES = {
         "optimal_lag": "+3 Days",
         "optimal_lag_days": 3,
         "heat_sensitivity_score": 75,
-        "mechanism": "Power substations face transformer thermal stress during multi-day heatwaves, increasing utility operating maintenance overhead after 3 days.",
+        "mechanism": "High air conditioning loads during extended heatwaves increase electrical grid transmission volumes and utility asset utilization.",
         "52w_high": 52.10,
         "52w_low": 41.20,
         "market_cap": "$15.4B",
@@ -360,7 +360,7 @@ STOCK_PROFILES = {
         "corr_1y": +0.126,
         "corr_3y": +0.118,
         "historical_insights": [
-            "Summer 2024: Extended ERCOT grid strain correlated with a +3-day utility revenue adjustment window."
+            "Summer 2024: Extended summer electrical demand correlated with utility operating metrics."
         ]
     }
 }

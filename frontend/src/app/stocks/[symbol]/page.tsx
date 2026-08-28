@@ -123,11 +123,11 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
         {/* Top Navigation & Breadcrumb */}
         <div className="flex items-center justify-between">
           <Link
-            href="/"
+            href="/stocks"
             className="inline-flex items-center gap-2 text-xs font-mono font-bold text-cyan-400 hover:text-cyan-300 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to Live Radar Terminal
+            Back to Stock Page
           </Link>
 
           <div className="flex items-center gap-2 text-xs font-mono text-slate-400">
