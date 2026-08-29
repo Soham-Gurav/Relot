@@ -25,6 +25,7 @@ export interface MarketQuote {
   price: number;
   change_pct: number;
   lag_days: number;
+  sparkline?: number[];
 }
 
 export interface LagDistributionItem {
@@ -128,13 +129,14 @@ export const fetchStockProfile = async (symbol: string): Promise<StockProfile | 
 export interface StockHistoryItem {
   date: string;
   close: number;
-  denoised_close?: number;
+  sma_20?: number;
+  sma_50?: number;
+  rsi?: number;
   temperature: number;
+  seasonality_temp?: number;
   is_heat_spike?: boolean;
   spike_severity?: string;
-  lagged_close?: number;
-  raw_return_pct?: number;
-  heat_impact_pct?: number;
+  forward_return_pct?: number;
   event_type?: string;
   is_negative_corr?: boolean;
   volume?: number;

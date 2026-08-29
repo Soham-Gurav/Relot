@@ -370,22 +370,25 @@ def get_live_market_quotes():
     symbols = list(STOCK_PROFILES.keys())
     quotes = []
     try:
-        df = yf.download(symbols, period="5d", progress=False)['Close']
+        df = yf.download(symbols, period="1mo", progress=False)['Close']
+        df = df.dropna()
         for sym in symbols:
             profile = STOCK_PROFILES.get(sym, {})
             if sym in df.columns:
-                series = df[sym].dropna()
+                series = df[sym]
                 if len(series) >= 2:
                     latest = float(series.iloc[-1])
                     prev = float(series.iloc[-2])
                     chg_pct = round(((latest - prev) / prev) * 100, 2)
+                    sparkline = [round(float(x), 2) for x in series.tolist()[-20:]]
                     quotes.append({
                         "symbol": sym,
                         "name": profile.get("name", sym),
                         "sector": profile.get("sector", "Financial"),
                         "price": round(latest, 2),
                         "change_pct": chg_pct,
-                        "lag_days": profile.get("optimal_lag_days", 0)
+                        "lag_days": profile.get("optimal_lag_days", 0),
+                        "sparkline": sparkline
                     })
     except Exception as e:
         print(f"Error fetching live market quotes: {e}")
@@ -396,7 +399,8 @@ def get_live_market_quotes():
                 "sector": profile["sector"],
                 "price": 100.0,
                 "change_pct": 1.25,
-                "lag_days": profile["optimal_lag_days"]
+                "lag_days": profile["optimal_lag_days"],
+                "sparkline": [100 + (x * 0.5) for x in range(20)]
             })
     return quotes
 
@@ -410,6 +414,8 @@ def get_stock_profile(symbol: str):
     try:
         t = yf.Ticker(sym)
         hist = t.history(period="5d")
+        if not hist.empty:
+            hist = hist.dropna(subset=['Close'])
         if not hist.empty:
             profile["live_price"] = round(float(hist['Close'].iloc[-1]), 2)
             prev = float(hist['Close'].iloc[-2]) if len(hist) > 1 else profile["live_price"]
@@ -445,8 +451,12 @@ def get_stock_multi_history(symbol: str, period: str = "1y"):
     try:
         t = yf.Ticker(sym)
         hist = t.history(period=yf_period)
+        if not hist.empty:
+            hist = hist.dropna(subset=['Close', 'Volume'])
+            
         if period.lower() == "3y" and not hist.empty:
             hist = hist.tail(756)
+            
         if not hist.empty:
             raw_closes = [round(float(row['Close']), 2) for _, row in hist.iterrows()]
             raw_dates = [idx for idx, _ in hist.iterrows()]
@@ -503,61 +513,54 @@ def get_stock_multi_history(symbol: str, period: str = "1y"):
                 is_spikes.append(is_spike)
                 severities.append(severity)
 
-            # Construct De-Noised Microclimate Operational Index (Base 100)
-            denoised_signal = []
-            curr_denoised = 100.0
-            for i in range(n):
-                if is_spikes[i]:
-                    temp_over = max(0.5, (temperatures[i] - spike_threshold) / 6.0)
-                    drag = corr_sign * (1.2 + 1.8 * temp_over)
-                    curr_denoised = max(40.0, round(curr_denoised * (1.0 + drag / 100.0), 2))
-                else:
-                    curr_denoised = round(curr_denoised * 1.0008, 2)
-                denoised_signal.append(curr_denoised)
+            hist['Temperature'] = temperatures
+            hist['SMA_20'] = hist['Close'].rolling(window=20, min_periods=1).mean().round(2)
+            hist['SMA_50'] = hist['Close'].rolling(window=50, min_periods=1).mean().round(2)
+            hist['Seasonality_Temp'] = hist['Temperature'].rolling(window=30, min_periods=1).mean().round(2)
+            
+            delta = hist['Close'].diff()
+            gain = (delta.where(delta > 0, 0)).fillna(0)
+            loss = (-delta.where(delta < 0, 0)).fillna(0)
+            avg_gain = gain.rolling(window=14, min_periods=1).mean()
+            avg_loss = loss.rolling(window=14, min_periods=1).mean()
+            rs = avg_gain / avg_loss
+            hist['RSI'] = (100 - (100 / (1 + rs))).round(2).fillna(50)
+            
+            hist['Forward_Return'] = (hist['Close'].shift(-lag_days) - hist['Close']) / hist['Close'] * 100
+            hist['Forward_Return'] = hist['Forward_Return'].round(2)
 
             records = []
-            for i in range(n):
-                base_p = float(raw_closes[i])
-                lag_idx = min(i + lag_days, n - 1)
-                real_lagged_close = float(raw_closes[lag_idx])
-
-                raw_return = 0.0
-                if base_p > 0:
-                    raw_return = float(round(((real_lagged_close - base_p) / base_p) * 100, 2))
-
-                # Physical microclimate heat drag/surge vector (% impact)
-                heat_impact = 0.0
+            for i, (idx, row) in enumerate(hist.iterrows()):
+                base_p = float(row['Close'])
+                fwd_return = float(row['Forward_Return']) if not pd.isna(row['Forward_Return']) else None
+                
                 event_type = "NORMAL"
-                if is_spikes[i]:
-                    temp_over = max(0.5, (temperatures[i] - spike_threshold) / 6.0)
-                    heat_impact = float(round(corr_sign * (2.5 + 3.5 * temp_over), 2))
-                    
+                if is_spikes[i] and fwd_return is not None:
                     if is_negative_corr:
-                        if raw_return < 0:
+                        if fwd_return < 0:
                             event_type = "PENALTY_VERIFIED"
                         else:
                             event_type = "MACRO_RALLY_OVERRIDE"
                     else:
-                        if raw_return > 0:
+                        if fwd_return > 0:
                             event_type = "DEMAND_SURGE_VERIFIED"
                         else:
                             event_type = "MACRO_PULLBACK_OVERRIDE"
-                else:
-                    heat_impact = raw_return
-
+                            
                 records.append({
                     "date": raw_dates[i].strftime("%Y-%m-%d"),
                     "close": base_p,
-                    "denoised_close": denoised_signal[i],
-                    "temperature": float(temperatures[i]),
+                    "sma_20": float(row['SMA_20']),
+                    "sma_50": float(row['SMA_50']),
+                    "rsi": float(row['RSI']),
+                    "temperature": float(row['Temperature']),
+                    "seasonality_temp": float(row['Seasonality_Temp']),
                     "is_heat_spike": bool(is_spikes[i]),
                     "spike_severity": str(severities[i]),
-                    "lagged_close": real_lagged_close,
-                    "raw_return_pct": raw_return,
-                    "heat_impact_pct": heat_impact,
+                    "forward_return_pct": fwd_return,
                     "event_type": event_type,
                     "is_negative_corr": is_negative_corr,
-                    "volume": int(hist['Volume'].iloc[i])
+                    "volume": int(row['Volume'])
                 })
             return records
     except Exception as e:

@@ -23,6 +23,12 @@ const jakarta = Plus_Jakarta_Sans({
 export const metadata: Metadata = {
   title: "Tempy — Microclimate Financial & Physical Infrastructure Terminal",
   description: "Enterprise physical infrastructure disruption engine, FortyGuard microclimate telemetry, and quantitative heat alpha radar.",
+  icons: {
+    icon: "/icon.png",
+  },
+  openGraph: {
+    images: [{ url: "/logo.png", width: 800, height: 600, alt: "Tempy Logo" }],
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

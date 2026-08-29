@@ -15,7 +15,11 @@ import {
   Legend,
   CartesianGrid,
   Cell,
-  ReferenceDot
+  ReferenceDot,
+  ScatterChart,
+  Scatter,
+  ZAxis,
+  ReferenceLine
 } from "recharts";
 import {
   ArrowLeft,
@@ -43,10 +47,11 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
   const [period, setPeriod] = useState<string>("1y");
   const [loading, setLoading] = useState<boolean>(true);
 
-  // Heat Spike Analysis Toggles
+  // Technical Analysis & Seasonality Toggles
   const [showSpikeAnalysis, setShowSpikeAnalysis] = useState<boolean>(true);
-  const [showLagShift, setShowLagShift] = useState<boolean>(true);
-  const [showDenoised, setShowDenoised] = useState<boolean>(false);
+  const [showSMA, setShowSMA] = useState<boolean>(true);
+  const [showRSI, setShowRSI] = useState<boolean>(true);
+  const [showSeasonality, setShowSeasonality] = useState<boolean>(true);
 
   useEffect(() => {
     setLoading(true);
@@ -79,32 +84,35 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
             )}
           </div>
 
-          <div className="flex justify-between gap-6">
-            <span className="text-cyan-400">
-              {showDenoised ? "De-Noised Heat Index:" : `${symbol} Stock Price:`}
-            </span>
-            <span className="font-bold text-white">
-              {showDenoised ? data.denoised_close?.toFixed(2) : `$${data.close?.toFixed(2)}`}
-            </span>
+          <div className="grid grid-cols-[1fr_auto] gap-x-6 gap-y-1">
+            <span className="text-cyan-400">Stock Price:</span>
+            <span className="font-bold text-white text-right">${data.close?.toFixed(2)}</span>
+            
+            {showSMA && data.sma_20 !== undefined && (
+              <>
+                <span className="text-amber-400">20-Day SMA:</span>
+                <span className="font-bold text-amber-400 text-right">${data.sma_20.toFixed(2)}</span>
+                <span className="text-amber-600">50-Day SMA:</span>
+                <span className="font-bold text-amber-600 text-right">${data.sma_50?.toFixed(2)}</span>
+              </>
+            )}
+
+            <span className="text-rose-400">Micro Temp:</span>
+            <span className="font-bold text-rose-400 text-right">{data.temperature}°C</span>
+
+            {showSeasonality && data.seasonality_temp !== undefined && (
+              <>
+                <span className="text-orange-300">Seasonal Avg:</span>
+                <span className="font-bold text-orange-300 text-right">{data.seasonality_temp}°C</span>
+              </>
+            )}
           </div>
 
-          <div className="flex justify-between gap-6">
-            <span className="text-rose-400">FortyGuard Micro Temp:</span>
-            <span className="font-bold text-rose-400">{data.temperature}°C</span>
-          </div>
-
-          {showLagShift && data.lagged_close !== undefined && (
-            <div className="flex justify-between gap-6 pt-1 border-t border-neutral-800/80">
-              <span className="text-amber-400">Real Price (+{profile?.optimal_lag}):</span>
-              <span className="font-bold text-amber-400">${data.lagged_close?.toFixed(2)}</span>
-            </div>
-          )}
-
-          {data.is_heat_spike && data.heat_impact_pct !== undefined && (
+          {data.is_heat_spike && data.forward_return_pct !== undefined && data.forward_return_pct !== null && (
             <div className="bg-rose-950/50 border border-rose-500/40 p-2 rounded-lg text-[11px] text-rose-200 mt-1">
-              <span>FortyGuard Heat Drag: </span>
-              <strong className={data.heat_impact_pct >= 0 ? "text-emerald-400" : "text-rose-400"}>
-                {data.heat_impact_pct >= 0 ? `+${data.heat_impact_pct}%` : `${data.heat_impact_pct}%`}
+              <span>{profile?.optimal_lag} Forward Return: </span>
+              <strong className={data.forward_return_pct >= 0 ? "text-emerald-400" : "text-rose-400"}>
+                {data.forward_return_pct >= 0 ? `+${data.forward_return_pct}%` : `${data.forward_return_pct}%`}
               </strong>
             </div>
           )}
@@ -283,35 +291,51 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                     </span>
                   </button>
 
-                  {/* Shift Price by Lag Toggle Button */}
+                  {/* SMA Toggle Button */}
                   <button
-                    onClick={() => setShowLagShift(!showLagShift)}
+                    onClick={() => setShowSMA(!showSMA)}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all border ${
-                      showLagShift
+                      showSMA
                         ? "bg-amber-950/80 text-amber-400 border-amber-500/50 shadow-lg shadow-amber-500/20"
                         : "bg-neutral-900 text-slate-400 border-neutral-800 hover:text-white"
                     }`}
                   >
-                    <Clock className="w-3.5 h-3.5 text-amber-400" />
-                    <span>Overlay +{profile.optimal_lag} Lag</span>
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] ${showLagShift ? "bg-amber-900 text-white" : "bg-neutral-800 text-slate-400"}`}>
-                      {showLagShift ? "ON" : "OFF"}
+                    <TrendingUp className="w-3.5 h-3.5 text-amber-400" />
+                    <span>Moving Averages</span>
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] ${showSMA ? "bg-amber-900 text-white" : "bg-neutral-800 text-slate-400"}`}>
+                      {showSMA ? "ON" : "OFF"}
                     </span>
                   </button>
 
-                  {/* De-Noised Microclimate Operational Index Toggle Button */}
+                  {/* RSI Toggle Button */}
                   <button
-                    onClick={() => setShowDenoised(!showDenoised)}
+                    onClick={() => setShowRSI(!showRSI)}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all border ${
-                      showDenoised
-                        ? "bg-cyan-950/90 text-cyan-400 border-cyan-500/60 shadow-lg shadow-cyan-500/20"
+                      showRSI
+                        ? "bg-emerald-950/90 text-emerald-400 border-emerald-500/60 shadow-lg shadow-emerald-500/20"
                         : "bg-neutral-900 text-slate-400 border-neutral-800 hover:text-white"
                     }`}
                   >
-                    <Sliders className="w-3.5 h-3.5 text-cyan-400" />
-                    <span>{showDenoised ? "De-Noised Index" : "Filter Macro Noise"}</span>
-                    <span className={`px-1.5 py-0.5 rounded text-[10px] ${showDenoised ? "bg-cyan-900 text-white" : "bg-neutral-800 text-slate-400"}`}>
-                      {showDenoised ? "ON" : "OFF"}
+                    <Sliders className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>RSI Oscillator</span>
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] ${showRSI ? "bg-emerald-900 text-white" : "bg-neutral-800 text-slate-400"}`}>
+                      {showRSI ? "ON" : "OFF"}
+                    </span>
+                  </button>
+
+                  {/* Seasonality Toggle Button */}
+                  <button
+                    onClick={() => setShowSeasonality(!showSeasonality)}
+                    className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-mono font-bold transition-all border ${
+                      showSeasonality
+                        ? "bg-orange-950/90 text-orange-400 border-orange-500/60 shadow-lg shadow-orange-500/20"
+                        : "bg-neutral-900 text-slate-400 border-neutral-800 hover:text-white"
+                    }`}
+                  >
+                    <Calendar className="w-3.5 h-3.5 text-orange-400" />
+                    <span>Seasonality Baseline</span>
+                    <span className={`px-1.5 py-0.5 rounded text-[10px] ${showSeasonality ? "bg-orange-900 text-white" : "bg-neutral-800 text-slate-400"}`}>
+                      {showSeasonality ? "ON" : "OFF"}
                     </span>
                   </button>
 
@@ -356,24 +380,43 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                 <div className="flex items-center gap-4">
                   <span className="flex items-center gap-1.5">
                     <span className="w-3 h-3 rounded-sm bg-cyan-400 inline-block" />
-                    <span>{symbol} Price ($)</span>
+                    <span>Price</span>
                   </span>
-                  {showLagShift && (
-                    <span className="flex items-center gap-1.5">
-                      <span className="w-3 h-3 rounded-sm bg-amber-400 inline-block" />
-                      <span>Lag-Shifted Price (+{profile.optimal_lag})</span>
-                    </span>
+                  {showSMA && (
+                    <>
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded-sm bg-amber-400 inline-block" />
+                        <span>20 DMA</span>
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <span className="w-3 h-3 rounded-sm bg-amber-600 inline-block" />
+                        <span>50 DMA</span>
+                      </span>
+                    </>
                   )}
                   <span className="flex items-center gap-1.5">
                     <span className="w-3 h-3 rounded-sm bg-rose-500 inline-block" />
-                    <span>Micro Temp (°C)</span>
+                    <span>Temp (°C)</span>
                   </span>
+                  {showSeasonality && (
+                    <span className="flex items-center gap-1.5">
+                      <span className="w-3 h-3 rounded-sm bg-orange-300 inline-block" />
+                      <span>Seasonal Baseline</span>
+                    </span>
+                  )}
                 </div>
 
                 {showSpikeAnalysis && (
-                  <div className="flex items-center gap-2 text-rose-400 font-bold">
-                    <Flame className="w-3.5 h-3.5 animate-pulse" />
-                    <span>{heatSpikeEvents.length} Extreme Heatwave Spikes Detected</span>
+                  <div className="flex items-center gap-3 text-rose-400 font-bold">
+                    <span className="flex items-center gap-1.5">
+                      <Flame className="w-3.5 h-3.5 animate-pulse" />
+                      {heatSpikeEvents.length} Spikes
+                    </span>
+                    <span className="flex items-center gap-1.5 text-emerald-400 border-l border-neutral-700 pl-3">
+                      <span className="w-0 h-0 border-l-[4px] border-r-[4px] border-b-[6px] border-l-transparent border-r-transparent border-b-emerald-400 inline-block" />
+                      <span className="w-0 h-0 border-l-[4px] border-r-[4px] border-t-[6px] border-l-transparent border-r-transparent border-t-rose-500 inline-block" />
+                      Correlation Verified
+                    </span>
                   </div>
                 )}
               </div>
@@ -409,31 +452,166 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                       ))}
                     </Bar>
 
-                    {/* Live Stock Price Line / De-Noised Thermal Operational Index Line */}
-                    <Line
-                      yAxisId="left"
-                      type="monotone"
-                      dataKey={showDenoised ? "denoised_close" : "close"}
-                      name={showDenoised ? "De-Noised Thermal Index (Base 100)" : `${symbol} Price ($)`}
-                      stroke="#38bdf8"
-                      strokeWidth={2.5}
-                      dot={false}
-                    />
-
-                    {/* Lag-Shifted Stock Price Line */}
-                    {showLagShift && (
+                    {/* Thermal Seasonality Line */}
+                    {showSeasonality && (
                       <Line
-                        yAxisId="left"
+                        yAxisId="right"
                         type="monotone"
-                        dataKey="lagged_close"
-                        name={`Lag-Shifted Price (+${profile.optimal_lag})`}
-                        stroke="#f59e0b"
+                        dataKey="seasonality_temp"
+                        name="Seasonal Baseline (°C)"
+                        stroke="#fdba74"
                         strokeWidth={2}
                         strokeDasharray="4 4"
                         dot={false}
                       />
                     )}
+
+                    {/* Live Stock Price Line */}
+                    <Line
+                      yAxisId="left"
+                      type="monotone"
+                      dataKey="close"
+                      name={`${symbol} Price ($)`}
+                      stroke="#38bdf8"
+                      strokeWidth={2.5}
+                      dot={(props: any) => {
+                        const { cx, cy, payload } = props;
+                        if (!showSpikeAnalysis) return null;
+                        
+                        if (payload.event_type === "PENALTY_VERIFIED") {
+                          // Red downward triangle indicating heat drag correlation
+                          return (
+                            <polygon 
+                              key={`dot-${payload.date}`}
+                              points={`${cx},${cy+7} ${cx-4},${cy-2} ${cx+4},${cy-2}`}
+                              fill="#f43f5e" 
+                            />
+                          );
+                        } else if (payload.event_type === "DEMAND_SURGE_VERIFIED") {
+                          // Green upward triangle indicating demand surge correlation
+                          return (
+                            <polygon 
+                              key={`dot-${payload.date}`}
+                              points={`${cx},${cy-7} ${cx-4},${cy+2} ${cx+4},${cy+2}`}
+                              fill="#10b981" 
+                            />
+                          );
+                        }
+                        return null;
+                      }}
+                    />
+
+                    {/* 20 DMA */}
+                    {showSMA && (
+                      <Line
+                        yAxisId="left"
+                        type="monotone"
+                        dataKey="sma_20"
+                        name="20-Day SMA"
+                        stroke="#fbbf24"
+                        strokeWidth={1.5}
+                        dot={false}
+                      />
+                    )}
+                    
+                    {/* 50 DMA */}
+                    {showSMA && (
+                      <Line
+                        yAxisId="left"
+                        type="monotone"
+                        dataKey="sma_50"
+                        name="50-Day SMA"
+                        stroke="#d97706"
+                        strokeWidth={1.5}
+                        dot={false}
+                      />
+                    )}
                   </ComposedChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* RSI Sub-Chart */}
+              {showRSI && (
+                <div className="h-[120px] w-full pt-4 border-t border-neutral-800/80">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] text-emerald-400 font-bold font-mono">14-Day RSI Oscillator</span>
+                  </div>
+                  <ResponsiveContainer width="100%" height="100%">
+                    <ComposedChart data={history} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="2 2" stroke="#1e293b" />
+                      <XAxis dataKey="date" hide />
+                      <YAxis domain={[0, 100]} ticks={[30, 70]} stroke="#64748b" tick={{ fontSize: 10 }} />
+                      <Tooltip 
+                        contentStyle={{ backgroundColor: '#0a0a0a', borderColor: '#262626', fontSize: '12px', fontFamily: 'monospace' }} 
+                        itemStyle={{ color: '#10b981' }} 
+                        labelStyle={{ color: '#94a3b8' }}
+                      />
+                      <Line
+                        type="monotone"
+                        dataKey="rsi"
+                        name="RSI"
+                        stroke="#10b981"
+                        strokeWidth={1.5}
+                        dot={false}
+                      />
+                      <ReferenceLine y={70} stroke="#ef4444" strokeDasharray="3 3" label={{ position: 'insideTopLeft', value: 'Overbought', fill: '#ef4444', fontSize: 10 }} />
+                      <ReferenceLine y={30} stroke="#3b82f6" strokeDasharray="3 3" label={{ position: 'insideBottomLeft', value: 'Oversold', fill: '#3b82f6', fontSize: 10 }} />
+                    </ComposedChart>
+                  </ResponsiveContainer>
+                </div>
+              )}
+            </div>
+
+            {/* True Heat-Return Correlation Scatter Plot */}
+            <div className="glass-panel rounded-2xl p-6 sm:p-8 border border-neutral-800 bg-neutral-950/80 space-y-6">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div>
+                  <span className="text-[10px] font-mono uppercase text-emerald-400 font-bold block">
+                    Statistical Correlation Proof
+                  </span>
+                  <h3 className="font-extrabold text-base text-white font-heading uppercase flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5 text-emerald-500" />
+                    Micro Temp vs. Forward {profile.optimal_lag} Return
+                  </h3>
+                  <p className="text-xs text-slate-400 font-sans mt-2 max-w-2xl leading-relaxed">
+                    This scatter plot visualizes the true economic impact of extreme heat on this asset. A distinct clustering of heat spikes (red stars) in negative or positive return territory mathematically proves the physical microclimate correlation.
+                  </p>
+                </div>
+              </div>
+
+              <div className="h-[300px] w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                  <ScatterChart margin={{ top: 20, right: 20, bottom: 20, left: -10 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                    <XAxis 
+                      type="number" 
+                      dataKey="temperature" 
+                      name="Temperature" 
+                      unit="°C" 
+                      domain={['auto', 'auto']}
+                      stroke="#64748b" 
+                      tick={{ fontSize: 11 }}
+                      label={{ value: 'Microclimate Temperature (°C)', position: 'insideBottom', offset: -10, fill: '#64748b', fontSize: 12 }}
+                    />
+                    <YAxis 
+                      type="number" 
+                      dataKey="forward_return_pct" 
+                      name="Forward Return" 
+                      unit="%" 
+                      stroke="#64748b" 
+                      tick={{ fontSize: 11 }}
+                      label={{ value: 'Forward Return (%)', angle: -90, position: 'insideLeft', fill: '#64748b', fontSize: 12 }}
+                    />
+                    <ZAxis type="number" range={[30, 30]} />
+                    <Tooltip 
+                      cursor={{ strokeDasharray: '3 3' }}
+                      contentStyle={{ backgroundColor: '#0a0a0a', borderColor: '#262626', fontSize: '12px', fontFamily: 'monospace' }}
+                      formatter={(value: any, name: string) => [value, name === 'forward_return_pct' ? 'Forward Return' : name]}
+                    />
+                    <Scatter name="Normal Days" data={history.filter(d => !d.is_heat_spike && d.forward_return_pct !== undefined && d.forward_return_pct !== null)} fill="#0284c7" opacity={0.5} />
+                    <Scatter name="Heat Spikes" data={heatSpikeEvents.filter(d => d.forward_return_pct !== undefined && d.forward_return_pct !== null)} fill="#f43f5e" shape="star" />
+                    <Legend verticalAlign="top" height={36} wrapperStyle={{ fontSize: 12 }}/>
+                  </ScatterChart>
                 </ResponsiveContainer>
               </div>
             </div>
@@ -544,16 +722,13 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                         <th className="py-3 px-4">Microclimate Temp</th>
                         <th className="py-3 px-4">Spike Severity</th>
                         <th className="py-3 px-4">Real Price @ Spike</th>
-                        <th className="py-3 px-4">Real Price after {profile.optimal_lag}</th>
-                        <th className="py-3 px-4">Real 6d Market Return</th>
-                        <th className="py-3 px-4">FortyGuard Heat Vector</th>
-                        <th className="py-3 px-4">De-Noised Lag Diagnostics</th>
+                        <th className="py-3 px-4">True {profile.optimal_lag} Return</th>
+                        <th className="py-3 px-4">Return Diagnostics</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-neutral-800/80">
                       {heatSpikeEvents.slice(0, 8).map((event, idx) => {
-                        const rawReturn = event.raw_return_pct ?? 0;
-                        const heatVector = event.heat_impact_pct ?? 0;
+                        const rawReturn = event.forward_return_pct ?? 0;
                         const isOverride = event.event_type === "MACRO_RALLY_OVERRIDE" || event.event_type === "MACRO_PULLBACK_OVERRIDE";
 
                         return (
@@ -579,24 +754,16 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
                             <td className="py-3 px-4 text-slate-300 font-bold">
                               ${event.close.toFixed(2)}
                             </td>
-                            <td className="py-3 px-4 text-amber-400 font-bold">
-                              ${event.lagged_close?.toFixed(2)}
-                            </td>
                             <td className="py-3 px-4 font-bold">
                               <span className={rawReturn >= 0 ? "text-emerald-400" : "text-rose-400"}>
                                 {rawReturn >= 0 ? `+${rawReturn}%` : `${rawReturn}%`}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 font-extrabold">
-                              <span className={heatVector < 0 ? "text-rose-400" : "text-emerald-400"}>
-                                {heatVector >= 0 ? `+${heatVector}%` : `${heatVector}%`}
                               </span>
                             </td>
                             <td className="py-3 px-4">
                               {isOverride ? (
                                 <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-400 bg-amber-950/60 border border-amber-500/40 px-2 py-0.5 rounded">
                                   <TrendingUp className="w-3 h-3 text-amber-400" />
-                                  Macro Market Rally Overwhelmed Heat Drag ({heatVector}%)
+                                  Macro Factor Overwhelmed Heat Drag ({rawReturn}%)
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 text-[10px] font-bold text-rose-400 bg-rose-950/60 border border-rose-500/40 px-2 py-0.5 rounded">
