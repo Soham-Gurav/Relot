@@ -92,8 +92,18 @@ export default function ScoutMap({ center, rivals, heatScore, actualTempC }: Sco
           const cellLat = minLat + (i * latStep);
           const cellLng = minLng + (j * lngStep);
           
+          // Calculate distance from absolute center to make the grid circular
+          const cellCenterLat = cellLat + latStep / 2;
+          const cellCenterLng = cellLng + lngStep / 2;
+          const distToAbsCenter = Math.sqrt(Math.pow(cellCenterLat - center[0], 2) + Math.pow(cellCenterLng - center[1], 2));
+          
+          // Skip rendering if outside the circle radius (LAT_SPAN / 2)
+          if (distToAbsCenter > (LAT_SPAN / 2.0)) {
+            continue;
+          }
+
           // Calculate temp variance (urban heat island effect is typically +1 to +4 degrees over base)
-          const dist = Math.sqrt(Math.pow(cellLat - hotCenter[0], 2) + Math.pow(cellLng - hotCenter[1], 2));
+          const dist = Math.sqrt(Math.pow(cellCenterLat - hotCenter[0], 2) + Math.pow(cellCenterLng - hotCenter[1], 2));
           // Reduce the variance multiplier so the grid stays realistic to the actual temperature
           let cellTemp = baseTemp + (1.5 - (dist * 100)) + (Math.random() * 0.8 - 0.4);
           cellTemp = Math.max(-10, Math.min(50, cellTemp)); // Hard caps
@@ -250,7 +260,7 @@ export default function ScoutMap({ center, rivals, heatScore, actualTempC }: Sco
       {showHeatmap && (
         <div className="absolute bottom-6 right-6 z-10 glass-panel p-3 rounded-xl border border-neutral-800 shadow-2xl backdrop-blur-md">
           <div className="text-[10px] font-mono text-neutral-400 font-bold uppercase mb-2">Microclimate Temp</div>
-          <div className="h-3 w-48 rounded-full bg-gradient-to-r from-blue-500 via-yellow-500 to-red-500"></div>
+          <div className="h-3 w-48 rounded-full" style={{ background: "linear-gradient(to right, hsl(240, 100%, 50%), hsl(180, 100%, 50%), hsl(120, 100%, 50%), hsl(60, 100%, 50%), hsl(0, 100%, 50%))" }}></div>
           <div className="flex justify-between text-[10px] font-mono text-white font-bold mt-1.5">
             <span>10°C</span>
             <span>25°C</span>

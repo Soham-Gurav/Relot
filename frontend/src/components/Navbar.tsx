@@ -26,7 +26,7 @@ export default function Navbar() {
         {/* Left: Minimal Black & White Brand Badge */}
         <Link href="/" className="flex items-center gap-3 group">
           <div className="w-8 h-8 rounded-xl overflow-hidden shadow-lg shadow-white/10 group-hover:scale-105 transition-transform flex items-center justify-center bg-black border border-white/20">
-            <img src="/logo.png" alt="Tempy Logo" className="w-full h-full object-cover" />
+            <img src="/Tempy.png" alt="Tempy Logo" className="w-full h-full object-cover" />
           </div>
           <span className="text-base font-black tracking-tight text-white uppercase font-mono">
             Tempy

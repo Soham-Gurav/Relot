@@ -40,6 +40,7 @@ export default function SolarGridSuitabilityEvaluator() {
   const leafletMapRef = useRef<any>(null);
   const layerGroupRef = useRef<any>(null);
   const debounceTimerRef = useRef<any>(null);
+  const skipNextSearchRef = useRef<boolean>(false);
 
   // Live Autocomplete Suggestions Engine (Google Maps style)
   useEffect(() => {
@@ -48,6 +49,11 @@ export default function SolarGridSuitabilityEvaluator() {
       if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
       setSuggestions([]);
       setShowSuggestions(false);
+      return;
+    }
+
+    if (skipNextSearchRef.current) {
+      skipNextSearchRef.current = false;
       return;
     }
 
@@ -85,6 +91,9 @@ export default function SolarGridSuitabilityEvaluator() {
   const handleSelectSuggestion = async (item: any) => {
     setShowSuggestions(false);
     setSuggestions([]);
+    
+    skipNextSearchRef.current = true;
+    
     const mainTitle = item.display_name.split(",")[0];
     setSearchQuery(mainTitle);
 

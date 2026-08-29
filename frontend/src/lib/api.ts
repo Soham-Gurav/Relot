@@ -250,8 +250,9 @@ export const fetchLiveVehicles = async (): Promise<LiveVehicle[]> => {
     }
   } catch {}
 
+  const API_BASE = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
   try {
-    const res = await axios.get("/api/live-vehicles", { timeout: 3000 });
+    const res = await axios.get(`${API_BASE}/api/live-vehicles`, { timeout: 3000 });
     if (res.data.vehicles && res.data.vehicles.length >= 10) {
       return res.data.vehicles;
     }
@@ -292,8 +293,9 @@ export const fetchCargoTelemetry = async (mode: string = "live"): Promise<CargoT
     const res = await axios.get(`${API_BASE}/cargo-telemetry?mode=${mode}`, { timeout: 3000 });
     return res.data;
   } catch {
+    const API_BASE = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
     try {
-      const res = await axios.get(`/api/cargo-telemetry?mode=${mode}`, { timeout: 3000 });
+      const res = await axios.get(`${API_BASE}/api/cargo-telemetry?mode=${mode}`, { timeout: 3000 });
       return res.data;
     } catch {
       const isLive = mode === "live";

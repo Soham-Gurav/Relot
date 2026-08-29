@@ -18,7 +18,7 @@ const FALLBACK_NODES: EconomicNode[] = [
 ];
 
 export const HeroSection: React.FC<Props> = ({ nodes, selectedNode, onSelectNode }) => {
-  const displayNodes = nodes.length > 0 ? nodes : FALLBACK_NODES;
+  const displayNodes = nodes.length > 0 ? nodes : [];
   const heatSpikeNodes = displayNodes.filter(
     (node) => node.has_heat_spike === true || node.id === "airport_phoenix" || node.id === "grid_ercot" || node.id === "texas_grid"
   );
@@ -73,7 +73,7 @@ export const HeroSection: React.FC<Props> = ({ nodes, selectedNode, onSelectNode
           }}
           config={{
             showAtmosphere: false,
-            autoRotateSpeed: 0,
+            autoRotateSpeed: 0.3,
             enableZoom: false,
           }}
         />

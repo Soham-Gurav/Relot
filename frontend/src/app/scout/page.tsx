@@ -1,25 +1,87 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import { Search, MapPin, Activity, Flame, Store, BarChart3, AlertCircle } from "lucide-react";
 
 // Dynamically import Leaflet map to avoid SSR issues
 const ScoutMap = dynamic(() => import("@/components/ScoutMap"), { ssr: false });
 
 export default function ScoutPage() {
-  const [locationName, setLocationName] = useState("New York");
+  const [locationName, setLocationName] = useState("");
   const [targetDate, setTargetDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [category, setCategory] = useState("restaurant");
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
+  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState<boolean>(false);
+  const debounceTimerRef = useRef<any>(null);
+  const skipNextSearchRef = useRef<boolean>(false);
+
+  // Live Autocomplete Suggestions Engine
+  useEffect(() => {
+    const query = locationName.trim();
+    if (!query || query.length < 2) {
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+      setSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    if (skipNextSearchRef.current) {
+      skipNextSearchRef.current = false;
+      return;
+    }
+
+    if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    let isCurrent = true;
+
+    debounceTimerRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=5&addressdetails=1`);
+        const data = await res.json();
+        if (isCurrent) {
+          if (data && Array.isArray(data) && data.length > 0 && locationName.trim().length >= 2) {
+            setSuggestions(data);
+            setShowSuggestions(true);
+          } else {
+            setSuggestions([]);
+            setShowSuggestions(false);
+          }
+        }
+      } catch (e) {
+        if (isCurrent) {
+          setSuggestions([]);
+          setShowSuggestions(false);
+        }
+      }
+    }, 250);
+
+    return () => {
+      isCurrent = false;
+      if (debounceTimerRef.current) clearTimeout(debounceTimerRef.current);
+    };
+  }, [locationName]);
+
+  const handleSelectSuggestion = (item: any) => {
+    setShowSuggestions(false);
+    setSuggestions([]);
+    
+    skipNextSearchRef.current = true;
+    
+    const mainTitle = item.display_name.split(",")[0];
+    setLocationName(mainTitle);
+  };
+
   const handleAnalyze = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("/api/scout/analyze", {
+      const API_BASE = process.env.NODE_ENV === "development" ? "http://localhost:8000" : "";
+      const res = await fetch(`${API_BASE}/api/scout/analyze`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -69,15 +131,57 @@ export default function ScoutPage() {
               
               <div className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5 col-span-2">
+                  <div className="space-y-1.5 col-span-2 relative">
                     <label className="text-[10px] font-mono text-neutral-500 font-bold uppercase">City or Neighborhood</label>
-                    <input 
-                      type="text" 
-                      value={locationName} 
-                      onChange={(e) => setLocationName(e.target.value)}
-                      placeholder="e.g. Austin, TX"
-                      className="w-full bg-black border border-neutral-800 rounded-lg px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-white transition-colors"
-                    />
+                    <div className="relative flex-1">
+                      <input 
+                        type="text" 
+                        value={locationName} 
+                        onChange={(e) => setLocationName(e.target.value)}
+                        onFocus={() => { if (suggestions.length > 0 && locationName.trim().length >= 2) setShowSuggestions(true); }}
+                        placeholder="e.g. Austin, TX"
+                        className="w-full bg-black border border-neutral-800 rounded-lg px-3 py-2 text-sm font-mono text-white focus:outline-none focus:border-white transition-colors"
+                      />
+                      {locationName && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLocationName("");
+                            setSuggestions([]);
+                            setShowSuggestions(false);
+                          }}
+                          className="absolute right-2.5 top-1/2 -translate-y-1/2 text-neutral-400 hover:text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full bg-neutral-900"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                    {/* Suggestions Dropdown */}
+                    {showSuggestions && suggestions.length > 0 && (
+                      <div className="absolute top-[60px] left-0 right-0 z-50 bg-[#09090b] border border-neutral-700 rounded-xl shadow-2xl overflow-hidden font-mono divide-y divide-neutral-850">
+                        <div className="px-3 py-1.5 bg-neutral-950 text-[9px] text-cyan-400 font-extrabold uppercase tracking-wider flex items-center justify-between">
+                          <span>📍 Suggested Locations</span>
+                        </div>
+                        {suggestions.map((item, idx) => {
+                          const mainName = item.display_name.split(",")[0];
+                          const subAddress = item.display_name.split(",").slice(1, 4).join(",");
+                          return (
+                            <button
+                              key={idx}
+                              type="button"
+                              onClick={() => handleSelectSuggestion(item)}
+                              className="w-full text-left px-4 py-2 hover:bg-neutral-900 transition-colors flex items-center gap-3 text-xs group"
+                            >
+                              <span className="text-sm shrink-0 group-hover:scale-125 transition-transform">📍</span>
+                              <div className="truncate">
+                                <span className="font-extrabold text-white block group-hover:text-cyan-400 transition-colors">{mainName}</span>
+                                <span className="text-[10px] text-neutral-400 truncate block">{subAddress}</span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-1.5 col-span-2">
                     <label className="text-[10px] font-mono text-neutral-500 font-bold uppercase">Target Date</label>
@@ -191,6 +295,7 @@ export default function ScoutPage() {
 
         </div>
       </main>
+      <Footer />
     </div>
   );
 }

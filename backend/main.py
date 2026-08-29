@@ -502,18 +502,21 @@ if os.path.isdir(frontend_out):
     app.mount("/", StaticFiles(directory=frontend_out, html=True), name="frontend")
 else:
     # LOCAL DEV MODE: Start Next.js dev server alongside FastAPI
-    try:
-        print("Starting Next.js frontend in development mode...")
-        # Use shell=True for cross-platform compatibility (Windows npm.cmd etc)
-        npm_cmd = "npm.cmd" if os.name == "nt" else "npm"
-        frontend_process = subprocess.Popen([npm_cmd, "run", "dev"], cwd=frontend_src)
-        
-        def cleanup_frontend():
-            frontend_process.terminate()
+    # Prevent uvicorn reloader from starting duplicate Next.js processes
+    if os.environ.get("FRONTEND_STARTED") != "1":
+        os.environ["FRONTEND_STARTED"] = "1"
+        try:
+            print("Starting Next.js frontend in development mode...")
+            # Use shell=True for cross-platform compatibility (Windows npm.cmd etc)
+            npm_cmd = "npm.cmd" if os.name == "nt" else "npm"
+            frontend_process = subprocess.Popen([npm_cmd, "run", "dev"], cwd=frontend_src)
             
-        atexit.register(cleanup_frontend)
-    except Exception as e:
-        print(f"Failed to start frontend dev server: {e}")
+            def cleanup_frontend():
+                frontend_process.terminate()
+                
+            atexit.register(cleanup_frontend)
+        except Exception as e:
+            print(f"Failed to start frontend dev server: {e}")
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))

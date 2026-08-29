@@ -351,8 +351,8 @@ function Scene({ markers, arcs = [], config, selectedNodeId, onMarkerClick, onMa
         minDistance={2.2}
         maxDistance={12}
         rotateSpeed={0.3}
-        autoRotate={false}
-        autoRotateSpeed={0}
+        autoRotate={config.autoRotateSpeed > 0}
+        autoRotateSpeed={config.autoRotateSpeed}
         enableDamping
         dampingFactor={0.1}
       />

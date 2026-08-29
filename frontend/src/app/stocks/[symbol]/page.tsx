@@ -1,4 +1,5 @@
 "use client";
+import Footer from "@/components/Footer";
 
 import { useEffect, useState, use } from "react";
 import Link from "next/link";
@@ -884,9 +885,7 @@ export default function StockDetailPage({ params }: { params: Promise<{ symbol: 
 
       </main>
 
-      <footer className="border-t border-neutral-800 bg-black py-8 text-center text-xs font-mono text-neutral-500">
-        <p>MacroHeat 360 Stock Intelligence • Powered by FortyGuard Microclimate API®</p>
-      </footer>
+      <Footer />
     </div>
   );
 }
