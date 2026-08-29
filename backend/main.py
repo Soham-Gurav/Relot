@@ -218,7 +218,7 @@ ECONOMIC_NODES = [
     }
 ]
 
-@app.get("/")
+@app.get("/api/status")
 def read_root():
     return {
         "status": "online",
