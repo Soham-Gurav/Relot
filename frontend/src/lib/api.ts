@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE = "http://127.0.0.1:8000/api";
+const API_BASE = process.env.NODE_ENV === "development" ? "http://127.0.0.1:8000/api" : "/api";
 
 export interface EconomicNode {
   id: string;
