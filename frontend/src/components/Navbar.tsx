@@ -15,6 +15,7 @@ export default function Navbar() {
     { name: "Cargo & Supply Chain", link: "/cargo" },
     { name: "Energy Grid", link: "/grid" },
     { name: "Stocks Analytics", link: "/stocks" },
+    { name: "Scout", link: "/scout" },
     { name: "Backtest", link: "/backtest" },
   ];
 

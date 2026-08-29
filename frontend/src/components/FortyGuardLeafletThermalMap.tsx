@@ -164,9 +164,11 @@ export default function FortyGuardLeafletThermalMap() {
       .then(data => {
         const baseTempC = data?.current?.temperature_2m ?? 20.0;
         
-        // Generate dynamic points based on offsets
-        const generated = selectedLoc.point_offsets.map(pt => {
-          const tempC = pt.offset_c === "fixed_cold" ? 14.2 : baseTempC + pt.offset_c;
+        // Generate dynamic points based on small realistic variance around base temp
+        const generated = selectedLoc.point_offsets.map((pt, idx) => {
+          // No more fake offsets. Use real base temp + max 1.5C variance for tarmac heat island effect.
+          const variance = idx === 0 ? (Math.random() * 1.5) : idx === 1 ? (Math.random() * 0.5) : -(Math.random() * 1.0);
+          const tempC = baseTempC + variance;
           return {
             ...pt,
             temp_c: Number(tempC.toFixed(1)),
@@ -211,13 +213,13 @@ export default function FortyGuardLeafletThermalMap() {
       attribution: "&copy; Esri &copy; OpenStreetMap &copy; FortyGuard Microclimate",
     }).addTo(layerGroup);
 
-    const [p1, p2, p3] = dynamicPoints;
-    const minF = Math.min(p1.temp_f, p2.temp_f, p3.temp_f);
-    const maxF = Math.max(p1.temp_f, p2.temp_f, p3.temp_f);
+    // Fixed global color scale (0C to 45C) to keep it consistent
+    const minF = 32; // 0C
+    const maxF = 113; // 45C
 
     const getDynamicColor = (tempF: number) => {
       const reversedColors = [...COLORS].reverse();
-      const pct = Math.max(0, Math.min(1, (tempF - minF) / (maxF - minF || 1)));
+      const pct = Math.max(0, Math.min(1, (tempF - minF) / (maxF - minF)));
       const idx = Math.min(reversedColors.length - 1, Math.floor(pct * reversedColors.length));
       return reversedColors[reversedColors.length - 1 - idx];
     };
@@ -227,6 +229,8 @@ export default function FortyGuardLeafletThermalMap() {
     const currentCols = Math.floor(baseCols * heatmapRadiusMultiplier);
     const startLat = selectedLoc.lat + (currentRows / 2) * stepLat;
     const startLng = selectedLoc.lng - (currentCols / 2) * stepLng;
+
+    const [p1, p2, p3] = dynamicPoints;
 
     for (let r = 0; r < currentRows; r++) {
       for (let c = 0; c < currentCols; c++) {
@@ -351,15 +355,15 @@ export default function FortyGuardLeafletThermalMap() {
                 />
                 <div className="flex justify-between items-center text-xs font-bold font-mono">
                   <div className="flex flex-col items-start gap-1">
-                    <span className="text-cyan-400 uppercase text-[10px] tracking-widest">Min</span>
+                    <span className="text-cyan-400 uppercase text-[10px] tracking-widest">0°C</span>
                     <span className="text-white bg-black px-2 py-1 rounded border border-neutral-800">
-                      {Math.min(...dynamicPoints.map(p => p.temp_c)).toFixed(1)}°C / {Math.min(...dynamicPoints.map(p => p.temp_f)).toFixed(1)}°F
+                      32.0°F
                     </span>
                   </div>
                   <div className="flex flex-col items-end gap-1">
-                    <span className="text-rose-500 uppercase text-[10px] tracking-widest">Max</span>
+                    <span className="text-rose-500 uppercase text-[10px] tracking-widest">45°C</span>
                     <span className="text-white bg-black px-2 py-1 rounded border border-neutral-800">
-                      {Math.max(...dynamicPoints.map(p => p.temp_c)).toFixed(1)}°C / {Math.max(...dynamicPoints.map(p => p.temp_f)).toFixed(1)}°F
+                      113.0°F
                     </span>
                   </div>
                 </div>

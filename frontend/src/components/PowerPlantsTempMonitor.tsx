@@ -80,8 +80,7 @@ export default function PowerPlantsTempMonitor() {
 
   // Get active plant live temperature
   const baseLiveTempC = liveData[selectedPlant.id]?.temp_c ?? selectedPlant.surrounding_temp_c;
-  const coolingOffsetC = coolingMode === "once_through" ? -7.2 : coolingMode === "towers" ? -5.5 : -3.8;
-  const effectiveTempC = parseFloat((baseLiveTempC + coolingOffsetC).toFixed(1));
+  const effectiveTempC = parseFloat(baseLiveTempC.toFixed(1));
   const effectiveTempF = parseFloat((effectiveTempC * 1.8 + 32).toFixed(1));
 
   // Initialize Leaflet 2D Map with Surrounding Thermal Plume Heatmap Gradient Circles
@@ -234,48 +233,7 @@ export default function PowerPlantsTempMonitor() {
             </span>
           </div>
 
-          {/* Applied Cooling System Switcher */}
-          <div className="space-y-3 border-b border-neutral-800 pb-4">
-            <span className="text-[10px] uppercase text-cyan-400 font-bold block flex items-center gap-1.5"><Activity className="w-3.5 h-3.5"/> Apply Facility Cooling System</span>
-            <div className="grid grid-cols-3 gap-2 text-[10px] font-bold">
-              <button
-                onClick={() => setCoolingMode("towers")}
-                className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${
-                  coolingMode === "towers"
-                    ? "bg-cyan-950/40 border-cyan-500 text-cyan-100 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
-                    : "bg-[#09090b] text-neutral-400 border-neutral-800 hover:border-neutral-600 hover:text-white"
-                }`}
-              >
-                <Fan className={`w-5 h-5 ${coolingMode === "towers" ? "text-cyan-400 animate-spin" : "text-neutral-500"}`} style={{ animationDuration: "3s" }} />
-                <span className="text-center leading-tight">Mechanical<br/>Towers</span>
-                <span className={coolingMode === "towers" ? "text-cyan-400 font-extrabold" : "text-neutral-500"}>-5.5°C</span>
-              </button>
-              <button
-                onClick={() => setCoolingMode("once_through")}
-                className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${
-                  coolingMode === "once_through"
-                    ? "bg-cyan-950/40 border-cyan-500 text-cyan-100 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
-                    : "bg-[#09090b] text-neutral-400 border-neutral-800 hover:border-neutral-600 hover:text-white"
-                }`}
-              >
-                <Droplets className={`w-5 h-5 ${coolingMode === "once_through" ? "text-cyan-400 animate-bounce" : "text-neutral-500"}`} />
-                <span className="text-center leading-tight">Once-Through<br/>Deep</span>
-                <span className={coolingMode === "once_through" ? "text-cyan-400 font-extrabold" : "text-neutral-500"}>-7.2°C</span>
-              </button>
-              <button
-                onClick={() => setCoolingMode("hybrid")}
-                className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${
-                  coolingMode === "hybrid"
-                    ? "bg-cyan-950/40 border-cyan-500 text-cyan-100 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
-                    : "bg-[#09090b] text-neutral-400 border-neutral-800 hover:border-neutral-600 hover:text-white"
-                }`}
-              >
-                <RefreshCw className={`w-5 h-5 ${coolingMode === "hybrid" ? "text-cyan-400 animate-spin" : "text-neutral-500"}`} style={{ animationDuration: "4s" }} />
-                <span className="text-center leading-tight">Recirculating<br/>Hybrid</span>
-                <span className={coolingMode === "hybrid" ? "text-cyan-400 font-extrabold" : "text-neutral-500"}>-3.8°C</span>
-              </button>
-            </div>
-          </div>
+
 
           <div className="grid grid-cols-2 gap-3 text-[11px]">
             <div className="p-3 rounded-xl bg-black border border-neutral-850">
@@ -334,7 +292,9 @@ export default function PowerPlantsTempMonitor() {
                 <td className="py-3 px-4">{plant.state}</td>
                 <td className="py-3 px-4 font-bold text-neutral-200">{plant.type}</td>
                 <td className="py-3 px-4 font-extrabold text-cyan-400">{plant.capacity_mw.toLocaleString()} MW</td>
-                <td className="py-3 px-4 font-bold">{plant.surrounding_temp_c}°C ({plant.surrounding_temp_f}°F)</td>
+                <td className="py-3 px-4 font-bold text-white">
+                  {liveData[plant.id]?.temp_c ?? plant.surrounding_temp_c}°C ({liveData[plant.id]?.temp_f ?? plant.surrounding_temp_f}°F)
+                </td>
                 <td className="py-3 px-4 text-neutral-400">{plant.cooling_source}</td>
                 <td className="py-3 px-4">
                   <span className={`px-2.5 py-1 rounded text-[10px] font-extrabold border whitespace-nowrap inline-block ${

@@ -14,6 +14,7 @@ from market_service import (
     get_stock_multi_history
 )
 from backtest_engine import get_backtest_matrix
+import scout_service
 
 app = FastAPI(
     title="MacroHeat 360 API",
@@ -454,6 +455,37 @@ def get_predictive_signals():
         }
     ]
     return {"signals": signals}
+
+# -----------------------------------------------------------------
+# Scout Geospatial Business Intelligence Route
+# -----------------------------------------------------------------
+from pydantic import BaseModel
+import scout_service
+
+class ScoutRequest(BaseModel):
+    location_name: str
+    category: str
+    date: str
+
+@app.post("/api/scout/analyze")
+async def scout_location(req: ScoutRequest):
+    lat, lng = 40.7128, -74.0060 # Default NYC
+    try:
+        r = requests.get(f"https://nominatim.openstreetmap.org/search?q={req.location_name}&format=json&limit=1", headers={"User-Agent": "TempyApp/1.0"}, timeout=5)
+        if r.status_code == 200:
+            data = r.json()
+            if len(data) > 0:
+                lat = float(data[0]["lat"])
+                lng = float(data[0]["lon"])
+    except Exception as e:
+        print(f"Geocoding failed: {e}")
+        
+    result = scout_service.analyze_location(lat, lng, req.category, req.date)
+    result["location_name"] = req.location_name
+    
+    if not result.get("success"):
+        raise HTTPException(status_code=500, detail="Failed to fetch scout intelligence")
+    return result
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
