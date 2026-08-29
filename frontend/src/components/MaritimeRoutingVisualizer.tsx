@@ -41,13 +41,7 @@ export default function MaritimeRoutingVisualizer() {
   }, []);
 
   // Live Maritime Freight Vessels Data
-  const MARITIME_VESSELS: LiveVehicle[] = [
-    { callsign: "EVER GIVEN", carrier: "Evergreen Marine Line", lat: 24.5, lng: -150.2, heading: 72, altitude_m: 0, speed_kts: 21.4, destination_code: "USLAX", destination_name: "Port of Los Angeles", dest_temp_c: 21.3, density_altitude_ft: 0, thrust_loss_pct: 0, offload_lbs: 0, payload_status: "NOMINAL_TRANSIT", advisory: "NOMINAL: Trans-Pacific cargo vessel in speed transit to Port of Los Angeles. ETA 2.5 days.", type: "maritime" },
-    { callsign: "MAERSK MC-KINNEY", carrier: "Maersk Line", lat: 38.2, lng: -45.6, heading: 275, altitude_m: 0, speed_kts: 19.8, destination_code: "USNYC", destination_name: "Port of NY & NJ", dest_temp_c: 22.1, density_altitude_ft: 0, thrust_loss_pct: 0, offload_lbs: 0, payload_status: "NOMINAL_TRANSIT", advisory: "NOMINAL: Trans-Atlantic heavy container vessel maintaining 19.8 kts toward Port of NY/NJ.", type: "maritime" },
-    { callsign: "COSCO SHIPPING", carrier: "COSCO Lines", lat: 27.8, lng: -92.4, heading: 340, altitude_m: 0, speed_kts: 17.5, destination_code: "USIAH", destination_name: "Port of Houston", dest_temp_c: 25.8, density_altitude_ft: 0, thrust_loss_pct: 0, offload_lbs: 0, payload_status: "MARITIME_THERMAL_DELAY", advisory: "WARNING: High dockside asphalt temperatures at Houston berth. Port crane throughput delayed +1.8 days.", type: "maritime" },
-    { callsign: "MSC OSCAR", carrier: "MSC Mediterranean Shipping", lat: 30.1, lng: -122.5, heading: 55, altitude_m: 0, speed_kts: 22.0, destination_code: "USLAX", destination_name: "Port of Los Angeles", dest_temp_c: 21.3, density_altitude_ft: 0, thrust_loss_pct: 0, offload_lbs: 0, payload_status: "NOMINAL_TRANSIT", advisory: "NOMINAL: 19,224 TEU container vessel approaching Southern California maritime approach.", type: "maritime" },
-    { callsign: "CMA CGM BRAZIL", carrier: "CMA CGM Group", lat: 31.5, lng: -77.8, heading: 295, altitude_m: 0, speed_kts: 18.6, destination_code: "USSAV", destination_name: "Port of Savannah", dest_temp_c: 24.5, density_altitude_ft: 0, thrust_loss_pct: 0, offload_lbs: 0, payload_status: "ELEVATED_DOCK_WAIT", advisory: "ELEVATED: High humidity & asphalt thermal heat in Savannah terminal yard. Berth queue 14 hours.", type: "maritime" },
-  ];
+  const MARITIME_VESSELS: LiveVehicle[] = [];
 
   const allVehicles = [...liveVehicles, ...MARITIME_VESSELS];
 

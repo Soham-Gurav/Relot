@@ -39,7 +39,6 @@ USA_CARGO_HUBS = [
         "lng": -112.0101,
         "elevation_ft": 1135,
         "runway_ft": 11489,
-        "temp_celsius": 42.5,
         "primary_carrier": "FedEx Express (FDX)",
         "hub_type": "Air Freight",
         "has_heat_spike": True
@@ -52,7 +51,6 @@ USA_CARGO_HUBS = [
         "lng": -89.9767,
         "elevation_ft": 341,
         "runway_ft": 11120,
-        "temp_celsius": 38.2,
         "primary_carrier": "FedEx World Hub",
         "hub_type": "Air Cargo Superhub",
         "has_heat_spike": True
@@ -65,7 +63,6 @@ USA_CARGO_HUBS = [
         "lng": -85.7360,
         "elevation_ft": 501,
         "runway_ft": 11887,
-        "temp_celsius": 36.8,
         "primary_carrier": "UPS Worldport",
         "hub_type": "Air Cargo Superhub",
         "has_heat_spike": False
@@ -78,7 +75,6 @@ USA_CARGO_HUBS = [
         "lng": -95.3368,
         "elevation_ft": 97,
         "runway_ft": 12000,
-        "temp_celsius": 39.5,
         "primary_carrier": "Gulf Seaport & Freight",
         "hub_type": "Intermodal Air/Port",
         "has_heat_spike": True
@@ -91,7 +87,6 @@ USA_CARGO_HUBS = [
         "lng": -118.4085,
         "elevation_ft": 128,
         "runway_ft": 12923,
-        "temp_celsius": 34.2,
         "primary_carrier": "Atlas Air / Prime Air",
         "hub_type": "Intermodal Seaport/Air",
         "has_heat_spike": False
@@ -104,7 +99,6 @@ USA_CARGO_HUBS = [
         "lng": -87.9073,
         "elevation_ft": 668,
         "runway_ft": 13000,
-        "temp_celsius": 35.1,
         "primary_carrier": "United Cargo / DHL",
         "hub_type": "Midwest Gateway",
         "has_heat_spike": False
@@ -130,7 +124,7 @@ def get_cargo_telemetry(mode: str = "live"):
             pressure_hpa = fg_data.get("surface_pressure", 1013.25)
             temp_source_label = "Observed Current Weather (NWS/Open-Meteo)"
         else:
-            temp = hub["temp_celsius"]
+            temp = fg_data.get("temperature", 35.0)  # Use fetched temp or fallback to 35.0 if api fails
             pressure_hpa = 1013.25
             temp_source_label = "Peak Stress-Test Thermal Scenario"
 
@@ -180,7 +174,6 @@ ECONOMIC_NODES = [
         "lag_days": 4,
         "physics_metric": "Density Altitude (ft)",
         "description": "High temperature decreases air density, reducing max aircraft payload and forcing freight offloading.",
-        "temp": 42.5,
         "has_heat_spike": True
     },
     {
@@ -194,7 +187,6 @@ ECONOMIC_NODES = [
         "lag_days": 5,
         "physics_metric": "Container Thermal Expansion",
         "description": "Ground surface heat causes crane productivity drops and rail speed restrictions near oil refineries.",
-        "temp": 39.2,
         "has_heat_spike": False
     },
     {
@@ -208,7 +200,6 @@ ECONOMIC_NODES = [
         "lag_days": 0,
         "physics_metric": "Nocturnal Heat Stress (°C)",
         "description": "Nocturnal non-cooling ($2m$ temp) damages crop pollination, driving instant commodity futures volatility.",
-        "temp": 28.5,
         "has_heat_spike": False
     },
     {
@@ -222,7 +213,6 @@ ECONOMIC_NODES = [
         "lag_days": 0,
         "physics_metric": "Transformer Thermal Load",
         "description": "Urban Heat Islands trigger massive AC demand, forcing natural gas peaker plants online immediately.",
-        "temp": 41.2,
         "has_heat_spike": True
     }
 ]
@@ -241,7 +231,13 @@ def health_check():
 
 @app.get("/api/nodes")
 def get_economic_nodes():
-    return {"nodes": ECONOMIC_NODES}
+    nodes_data = []
+    for node in ECONOMIC_NODES:
+        fg_data = fetch_fortyguard_telemetry(node["lat"], node["lng"])
+        node_copy = node.copy()
+        node_copy["temp"] = fg_data.get("temperature", 30.0)
+        nodes_data.append(node_copy)
+    return {"nodes": nodes_data}
 
 @app.get("/api/live-vehicles")
 def get_live_vehicles():
@@ -292,17 +288,23 @@ def get_live_vehicles():
                 if alt_ft < 1000:
                     continue
 
-                carrier = "FedEx Express Cargo" if callsign.startswith("FDX") or callsign.startswith("FX") else \
-                          "UPS Worldport Air" if callsign.startswith("UPS") or callsign.startswith("5X") else \
-                          "Atlas Air Heavy Freight" if callsign.startswith("GTI") or callsign.startswith("5Y") else \
-                          "Amazon Air Cargo" if callsign.startswith("AMZ") else \
-                          "Kalitta Air Heavy Freight" if callsign.startswith("CKS") or callsign.startswith("K4") else \
-                          "DHL / Aerologic Cargo" if callsign.startswith(("BOX", "CLX")) else \
-                          "ABX Air Freight" if callsign.startswith("ABX") or callsign.startswith("GB") else \
-                          "United Airlines Cargo" if callsign.startswith("UAL") or callsign.startswith("UA") else \
-                          "Delta Air Cargo" if callsign.startswith("DAL") or callsign.startswith("DL") else \
-                          "American Airlines Cargo" if callsign.startswith("AAL") or callsign.startswith("AA") else \
-                          "US Commercial Air Freighter"
+                if callsign.startswith(("FDX", "FX")):
+                    carrier = "FedEx Express Cargo"
+                elif callsign.startswith(("UPS", "5X")):
+                    carrier = "UPS Worldport Air"
+                elif callsign.startswith(("GTI", "5Y")):
+                    carrier = "Atlas Air Heavy Freight"
+                elif callsign.startswith("AMZ"):
+                    carrier = "Amazon Air Cargo"
+                elif callsign.startswith(("CKS", "K4")):
+                    carrier = "Kalitta Air Heavy Freight"
+                elif callsign.startswith(("BOX", "CLX")):
+                    carrier = "DHL / Aerologic Cargo"
+                elif callsign.startswith(("ABX", "GB")):
+                    carrier = "ABX Air Freight"
+                else:
+                    # Skip passenger flights, we only want real cargo flights
+                    continue
 
                 dest_hub = destinations[idx % len(destinations)]
                 if destination:
@@ -334,8 +336,17 @@ def get_live_vehicles():
                     "type": "aviation"
                 })
 
+            # Add Mock Maritime Vessels since FlightRadar24 only provides aviation data and there's no free live AIS marine API
+            mock_ships = [
+                { "callsign": "MSC_ISABELLA (Mocked AIS)", "carrier": "MSC", "lat": 29.52, "lng": -94.85, "heading": 320.0, "altitude_m": 0, "speed_kts": 14, "destination_code": "USIAH", "destination_name": "Port of Houston", "dest_temp_c": 25.8, "density_altitude_ft": 0, "thrust_loss_pct": 0, "offload_lbs": 0, "payload_status": "MARITIME_THERMAL_DELAY", "advisory": "MOCKED VESSEL (No Free AIS API): Port approach delayed due to asphalt thermal stress at berth.", "type": "maritime" },
+                { "callsign": "EVER_GIVEN (Mocked AIS)", "carrier": "Evergreen", "lat": 33.72, "lng": -118.25, "heading": 15.0, "altitude_m": 0, "speed_kts": 18, "destination_code": "USLAX", "destination_name": "Port of LA", "dest_temp_c": 21.3, "density_altitude_ft": 0, "thrust_loss_pct": 0, "offload_lbs": 0, "payload_status": "NORMAL_OPERATIONS", "advisory": "MOCKED VESSEL (No Free AIS API): Standard berth queue approach.", "type": "maritime" },
+                { "callsign": "CMA_CGM_ANTOINE (Mocked AIS)", "carrier": "CMA CGM", "lat": 40.50, "lng": -73.95, "heading": 340.0, "altitude_m": 0, "speed_kts": 12, "destination_code": "USNYC", "destination_name": "Port of NY/NJ", "dest_temp_c": 22.1, "density_altitude_ft": 0, "thrust_loss_pct": 0, "offload_lbs": 0, "payload_status": "NORMAL_OPERATIONS", "advisory": "MOCKED VESSEL (No Free AIS API): Normal container offload sequence.", "type": "maritime" },
+                { "callsign": "MAERSK_MC_KINNEY (Mocked AIS)", "carrier": "Maersk", "lat": 31.95, "lng": -80.95, "heading": 290.0, "altitude_m": 0, "speed_kts": 16, "destination_code": "USSAV", "destination_name": "Port of Savannah", "dest_temp_c": 24.5, "density_altitude_ft": 0, "thrust_loss_pct": 0, "offload_lbs": 0, "payload_status": "MARITIME_THERMAL_DELAY", "advisory": "MOCKED VESSEL (No Free AIS API): Crane efficiency reduced by 15% due to yard thermal limits.", "type": "maritime" }
+            ]
+            vehicles.extend(mock_ships)
+
             if vehicles:
-                return {"success": True, "count": len(vehicles), "vehicles": vehicles[:250]}
+                return {"success": True, "count": len(vehicles), "vehicles": vehicles}
     except Exception as e:
         print(f"Live Flight Radar Exception: {e}")
     
@@ -382,6 +393,12 @@ def get_predictive_signals():
     quotes_list = get_live_market_quotes()
     quotes_map = {q["symbol"]: q for q in quotes_list}
 
+    # Fetch dynamic temps
+    phx_temp = fetch_fortyguard_telemetry(33.4352, -112.0101).get("temperature", 30.0)
+    iowa_temp = fetch_fortyguard_telemetry(41.5868, -93.6250).get("temperature", 25.0)
+    ercot_temp = fetch_fortyguard_telemetry(29.7604, -95.3698).get("temperature", 32.0)
+    houston_temp = fetch_fortyguard_telemetry(29.7268, -95.2655).get("temperature", 32.0)
+
     signals = [
         {
             "id": "sig-1",
@@ -390,11 +407,11 @@ def get_predictive_signals():
             "ticker_name": "FedEx Corp",
             "ticker_price": quotes_map.get("FDX", {}).get("price", 333.71),
             "ticker_change": quotes_map.get("FDX", {}).get("change_pct", -0.10),
-            "heat_parameter": "42.1°C Heat Index (Runway Temp)",
-            "risk_score": 88,
-            "risk_level": "CRITICAL",
+            "heat_parameter": f"{phx_temp}°C Heat Index (Runway Temp)",
+            "risk_score": 88 if phx_temp > 35 else 45,
+            "risk_level": "CRITICAL" if phx_temp > 35 else "NORMAL",
             "optimal_lag": "+4 Days",
-            "prediction": "Density Altitude exceeds 5,200 ft. Offload risk detected for heavy cargo flights. Stock volatility expected in +4 days."
+            "prediction": "Density Altitude exceeds 5,200 ft. Offload risk detected for heavy cargo flights. Stock volatility expected in +4 days." if phx_temp > 35 else "Temperatures within normal limits. No payload restrictions expected."
         },
         {
             "id": "sig-2",
@@ -403,11 +420,11 @@ def get_predictive_signals():
             "ticker_name": "Teucrium Corn Fund",
             "ticker_price": quotes_map.get("CORN", {}).get("price", 19.59),
             "ticker_change": quotes_map.get("CORN", {}).get("change_pct", +1.93),
-            "heat_parameter": "30.1°C Wet-Bulb Nocturnal Heat",
-            "risk_score": 94,
-            "risk_level": "HIGH SENSITIVITY",
+            "heat_parameter": f"{iowa_temp}°C Wet-Bulb Nocturnal Heat",
+            "risk_score": 94 if iowa_temp > 25 else 42,
+            "risk_level": "HIGH SENSITIVITY" if iowa_temp > 25 else "NORMAL",
             "optimal_lag": "+0 Days (Immediate)",
-            "prediction": "High nighttime temperatures preventing crop cooling during critical pollination phase. Futures pricing reacting today."
+            "prediction": "High nighttime temperatures preventing crop cooling during critical pollination phase. Futures pricing reacting today." if iowa_temp > 25 else "Nominal overnight temperatures. Crop cooling phase uninterrupted."
         },
         {
             "id": "sig-3",
@@ -416,11 +433,11 @@ def get_predictive_signals():
             "ticker_name": "US Natural Gas Fund",
             "ticker_price": quotes_map.get("UNG", {}).get("price", 10.23),
             "ticker_change": quotes_map.get("UNG", {}).get("change_pct", +0.79),
-            "heat_parameter": "44.5°C Urban Heat Island Surge",
-            "risk_score": 92,
-            "risk_level": "HIGH",
+            "heat_parameter": f"{ercot_temp}°C Urban Heat Island Surge",
+            "risk_score": 92 if ercot_temp > 35 else 55,
+            "risk_level": "HIGH" if ercot_temp > 35 else "NORMAL",
             "optimal_lag": "+0 Days (Immediate)",
-            "prediction": "Houston substation heat load surging AC grid demand. Natural Gas peaker plants engaged for immediate balancing."
+            "prediction": "Houston substation heat load surging AC grid demand. Natural Gas peaker plants engaged for immediate balancing." if ercot_temp > 35 else "Grid load stable. Normal AC demand curve."
         },
         {
             "id": "sig-4",
@@ -429,11 +446,11 @@ def get_predictive_signals():
             "ticker_name": "Energy Select Sector SPDR",
             "ticker_price": quotes_map.get("XLE", {}).get("price", 62.06),
             "ticker_change": quotes_map.get("XLE", {}).get("change_pct", -1.66),
-            "heat_parameter": "39.8°C Ground Asphalt Surface Temp",
-            "risk_score": 76,
-            "risk_level": "MODERATE",
+            "heat_parameter": f"{houston_temp}°C Ground Asphalt Surface Temp",
+            "risk_score": 76 if houston_temp > 35 else 40,
+            "risk_level": "MODERATE" if houston_temp > 35 else "NORMAL",
             "optimal_lag": "+5 Days",
-            "prediction": "Thermal expansion rail speed limits near refinery docks. Container throughput backlog impact forecast in +5 days."
+            "prediction": "Thermal expansion rail speed limits near refinery docks. Container throughput backlog impact forecast in +5 days." if houston_temp > 35 else "Nominal ground temperatures. Normal dock operations."
         }
     ]
     return {"signals": signals}

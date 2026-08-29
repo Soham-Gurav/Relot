@@ -46,10 +46,10 @@ def fetch_fortyguard_telemetry(lat: float, lng: float, date_str: str = None):
 
     # 1. Fetch Real-World Live Weather Observation from Open-Meteo / NWS API
     live_obs = {
-        "temperature": 28.5,
-        "surface_pressure": 1013.25,
-        "relative_humidity": 45,
-        "wind_speed_kts": 6.5,
+        "temperature": None,
+        "surface_pressure": None,
+        "relative_humidity": None,
+        "wind_speed_kts": None,
         "source": "NWS / Open-Meteo Live Observation"
     }
 
@@ -58,10 +58,12 @@ def fetch_fortyguard_telemetry(lat: float, lng: float, date_str: str = None):
         r = requests.get(url, timeout=3)
         if r.status_code == 200:
             c = r.json().get("current", {})
-            live_obs["temperature"] = round(c.get("temperature_2m", 28.5), 1)
+            live_obs["temperature"] = round(c.get("temperature_2m", 20.0), 1)
             live_obs["surface_pressure"] = round(c.get("surface_pressure", 1013.25), 1)
             live_obs["relative_humidity"] = int(c.get("relative_humidity_2m", 45))
             live_obs["wind_speed_kts"] = round((c.get("wind_speed_10m", 12.0) * 0.539957), 1)
+        else:
+            print(f"Live Weather API returned status code: {r.status_code}")
     except Exception as e:
         print(f"Live Weather API fetch exception: {e}")
 

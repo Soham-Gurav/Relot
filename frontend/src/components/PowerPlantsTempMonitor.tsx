@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import "leaflet/dist/leaflet.css";
+import { Fan, Droplets, RefreshCw, Activity, Zap, Factory, Waves, ShieldAlert, ShieldCheck } from "lucide-react";
 
 export interface PowerPlantFacility {
   id: string;
@@ -156,11 +157,15 @@ export default function PowerPlantsTempMonitor() {
     POWER_PLANTS.forEach((p) => {
       const isSelected = p.id === selectedPlant.id;
 
+      const typeSvg = p.type === "Nuclear" 
+        ? `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-rose-400"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`
+        : `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-cyan-400"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>`;
+
       const pinHtml = `
         <div class="relative cursor-pointer group flex items-center justify-center">
-          <div class="px-2.5 py-1 rounded-xl bg-black/95 border-2 ${isSelected ? "border-cyan-400 scale-110" : "border-white/30"} text-white font-mono font-extrabold text-[11px] flex items-center gap-1.5 shadow-2xl transition-transform group-hover:scale-125">
-            <span>${p.type === "Nuclear" ? "⚛️" : "🌊"}</span>
-            <span>${p.code}: <b>${isSelected ? effectiveTempC : p.surrounding_temp_c}°C</b></span>
+          <div class="px-2.5 py-1.5 rounded-xl bg-black/95 border border-neutral-700 group-hover:border-white shadow-xl transition-all flex items-center gap-2 ${isSelected ? "ring-2 ring-cyan-500 scale-105" : ""}">
+            ${typeSvg}
+            <span class="text-white font-mono font-bold text-[10px] uppercase tracking-wider">${p.code}: ${isSelected ? effectiveTempC : p.surrounding_temp_c}°C</span>
           </div>
         </div>
       `;
@@ -199,11 +204,11 @@ export default function PowerPlantsTempMonitor() {
       </div>
 
       {/* Main Map + Selected Plant Detail Card */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
         
         {/* Map (7 cols) */}
         <div className="lg:col-span-7 space-y-3">
-          <div className="relative w-full h-[400px] rounded-2xl border border-neutral-800 overflow-hidden bg-black">
+          <div className="relative w-full h-[450px] rounded-2xl border border-neutral-800 overflow-hidden bg-black shadow-inner">
             <div ref={mapContainerRef} className="w-full h-full z-10" />
 
             <div className="absolute top-3 left-3 z-20 bg-black/90 border border-neutral-800 px-3 py-2 rounded-xl backdrop-blur-md text-xs">
@@ -230,38 +235,44 @@ export default function PowerPlantsTempMonitor() {
           </div>
 
           {/* Applied Cooling System Switcher */}
-          <div className="space-y-2 border-b border-neutral-800 pb-3">
-            <span className="text-[10px] uppercase text-cyan-400 font-bold block">Apply Facility Cooling System</span>
-            <div className="grid grid-cols-3 gap-1.5 text-[10px] font-bold">
+          <div className="space-y-3 border-b border-neutral-800 pb-4">
+            <span className="text-[10px] uppercase text-cyan-400 font-bold block flex items-center gap-1.5"><Activity className="w-3.5 h-3.5"/> Apply Facility Cooling System</span>
+            <div className="grid grid-cols-3 gap-2 text-[10px] font-bold">
               <button
                 onClick={() => setCoolingMode("towers")}
-                className={`p-2 rounded-xl border text-center transition-all ${
+                className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${
                   coolingMode === "towers"
-                    ? "bg-cyan-500 text-black border-cyan-400 font-extrabold"
-                    : "bg-black text-neutral-400 border-neutral-800 hover:text-white"
+                    ? "bg-cyan-950/40 border-cyan-500 text-cyan-100 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+                    : "bg-[#09090b] text-neutral-400 border-neutral-800 hover:border-neutral-600 hover:text-white"
                 }`}
               >
-                🌀 Mechanical Towers (-5.5°C)
+                <Fan className={`w-5 h-5 ${coolingMode === "towers" ? "text-cyan-400 animate-spin" : "text-neutral-500"}`} style={{ animationDuration: "3s" }} />
+                <span className="text-center leading-tight">Mechanical<br/>Towers</span>
+                <span className={coolingMode === "towers" ? "text-cyan-400 font-extrabold" : "text-neutral-500"}>-5.5°C</span>
               </button>
               <button
                 onClick={() => setCoolingMode("once_through")}
-                className={`p-2 rounded-xl border text-center transition-all ${
+                className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${
                   coolingMode === "once_through"
-                    ? "bg-cyan-500 text-black border-cyan-400 font-extrabold"
-                    : "bg-black text-neutral-400 border-neutral-800 hover:text-white"
+                    ? "bg-cyan-950/40 border-cyan-500 text-cyan-100 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+                    : "bg-[#09090b] text-neutral-400 border-neutral-800 hover:border-neutral-600 hover:text-white"
                 }`}
               >
-                🌊 Once-Through Deep (-7.2°C)
+                <Droplets className={`w-5 h-5 ${coolingMode === "once_through" ? "text-cyan-400 animate-bounce" : "text-neutral-500"}`} />
+                <span className="text-center leading-tight">Once-Through<br/>Deep</span>
+                <span className={coolingMode === "once_through" ? "text-cyan-400 font-extrabold" : "text-neutral-500"}>-7.2°C</span>
               </button>
               <button
                 onClick={() => setCoolingMode("hybrid")}
-                className={`p-2 rounded-xl border text-center transition-all ${
+                className={`p-3 rounded-xl border flex flex-col items-center justify-center gap-2 transition-all ${
                   coolingMode === "hybrid"
-                    ? "bg-cyan-500 text-black border-cyan-400 font-extrabold"
-                    : "bg-black text-neutral-400 border-neutral-800 hover:text-white"
+                    ? "bg-cyan-950/40 border-cyan-500 text-cyan-100 shadow-[0_0_15px_rgba(6,182,212,0.2)]"
+                    : "bg-[#09090b] text-neutral-400 border-neutral-800 hover:border-neutral-600 hover:text-white"
                 }`}
               >
-                🔄 Recirculating Hybrid (-3.8°C)
+                <RefreshCw className={`w-5 h-5 ${coolingMode === "hybrid" ? "text-cyan-400 animate-spin" : "text-neutral-500"}`} style={{ animationDuration: "4s" }} />
+                <span className="text-center leading-tight">Recirculating<br/>Hybrid</span>
+                <span className={coolingMode === "hybrid" ? "text-cyan-400 font-extrabold" : "text-neutral-500"}>-3.8°C</span>
               </button>
             </div>
           </div>
@@ -283,8 +294,10 @@ export default function PowerPlantsTempMonitor() {
             <span className="font-bold text-white text-xs">{selectedPlant.cooling_source}</span>
           </div>
 
-          <div className="p-3 rounded-xl bg-neutral-900 border border-neutral-800 space-y-1">
-            <span className="text-[9px] text-cyan-400 block uppercase font-bold">FortyGuard Thermodynamic Advisory</span>
+          <div className="p-4 rounded-xl bg-[#09090b] border border-neutral-800 space-y-1.5">
+            <span className="text-[9px] text-cyan-400 block uppercase font-bold flex items-center gap-1.5">
+              <ShieldAlert className="w-3 h-3"/> FortyGuard Thermodynamic Advisory
+            </span>
             <p className="text-[11px] text-neutral-300 leading-relaxed font-sans">{selectedPlant.advisory}</p>
           </div>
         </div>
@@ -314,9 +327,12 @@ export default function PowerPlantsTempMonitor() {
                   selectedPlant.id === plant.id ? "bg-neutral-900 text-white" : "hover:bg-neutral-950"
                 }`}
               >
-                <td className="py-3 px-4 font-bold text-white">{plant.name} ({plant.code})</td>
+                <td className="py-3 px-4 font-bold text-white flex items-center gap-2">
+                  {plant.type === "Nuclear" ? <Zap className="w-4 h-4 text-rose-400" /> : <Waves className="w-4 h-4 text-cyan-400" />}
+                  {plant.name} ({plant.code})
+                </td>
                 <td className="py-3 px-4">{plant.state}</td>
-                <td className="py-3 px-4">{plant.type}</td>
+                <td className="py-3 px-4 font-bold text-neutral-200">{plant.type}</td>
                 <td className="py-3 px-4 font-extrabold text-cyan-400">{plant.capacity_mw.toLocaleString()} MW</td>
                 <td className="py-3 px-4 font-bold">{plant.surrounding_temp_c}°C ({plant.surrounding_temp_f}°F)</td>
                 <td className="py-3 px-4 text-neutral-400">{plant.cooling_source}</td>

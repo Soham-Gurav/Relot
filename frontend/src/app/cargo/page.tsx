@@ -68,14 +68,7 @@ export default function CargoTerminal() {
   const payloadCutPct = Math.min(22, Math.max(0, parseFloat(((densityAltitude - 3000) / 360).toFixed(1))));
   const payloadCutLbs = Math.round(payloadCutPct * 1250);
 
-  const activeHubs = cargoTelemetry?.hubs || [
-    { code: "PHX", name: "Phoenix Sky Harbor", city: "Phoenix, AZ", lat: 33.43, lng: -112.01, temp_celsius: 42.5, current_temp_c: 34.1, current_temp_f: 93.4, surface_pressure_hpa: 971.8, relative_humidity: 27, wind_speed_kts: 4.6, primary_carrier: "FedEx Express (FDX)", physics: { density_altitude_ft: 4707, thrust_loss_pct: 12.5, offload_lbs: 4800, status: "CRITICAL_HEAT_HAZARD", advisory: "CRITICAL: High DA at PHX (4,707 ft). Model-derived B777-F restriction: Offload 4,800 lbs MTOW cargo payload for climb gradient safety." }, delay_cost_usd: 18500, has_heat_spike: true, fortyguard_status: "FortyGuard API Key: Insufficient Credits (4800 rem / 8600 req)", methodology_note: "Calculated estimate · Model-derived B777-F baseline" },
-    { code: "MEM", name: "Memphis FedEx Hub", city: "Memphis, TN", lat: 35.04, lng: -89.97, temp_celsius: 38.2, current_temp_c: 21.6, current_temp_f: 70.9, surface_pressure_hpa: 1007.3, relative_humidity: 82, wind_speed_kts: 2.2, primary_carrier: "FedEx World Hub", physics: { density_altitude_ft: 1950, thrust_loss_pct: 5.6, offload_lbs: 1390, status: "ELEVATED_PAYLOAD_RESTRICTION", advisory: "ELEVATED: OAT at MEM 21.6°C (70.9°F). Model-derived B777-F trim: 1,390 lbs." }, delay_cost_usd: 12400, has_heat_spike: true, fortyguard_status: "FortyGuard API Key: Insufficient Credits (4800 rem / 8600 req)", methodology_note: "Calculated estimate · Model-derived B777-F baseline" },
-    { code: "SDF", name: "Louisville UPS Hub", city: "Louisville, KY", lat: 38.17, lng: -85.73, temp_celsius: 36.8, current_temp_c: 20.2, current_temp_f: 68.4, surface_pressure_hpa: 1001.2, relative_humidity: 87, wind_speed_kts: 4.7, primary_carrier: "UPS Worldport", physics: { density_altitude_ft: 1850, thrust_loss_pct: 4.7, offload_lbs: 507, status: "NORMAL_OPERATIONS", advisory: "NOMINAL: Current OAT at SDF 20.2°C (68.4°F) matches NWS observation. Climb profile within normal parameters." }, delay_cost_usd: 11200, has_heat_spike: false, fortyguard_status: "FortyGuard API Key: Insufficient Credits (4800 rem / 8600 req)", methodology_note: "Calculated estimate · Model-derived B777-F baseline" },
-    { code: "IAH", name: "Houston Intercontinental", city: "Houston, TX", lat: 29.99, lng: -95.33, temp_celsius: 39.5, current_temp_c: 25.8, current_temp_f: 78.4, surface_pressure_hpa: 1012.9, relative_humidity: 76, wind_speed_kts: 2.9, primary_carrier: "Gulf Seaport & Freight", physics: { density_altitude_ft: 1410, thrust_loss_pct: 4.6, offload_lbs: 384, status: "NORMAL_OPERATIONS", advisory: "NOMINAL: OAT at Gulf Port 25.8°C (78.4°F). Normal operational parameters." }, delay_cost_usd: 9800, has_heat_spike: true, fortyguard_status: "FortyGuard API Key: Insufficient Credits (4800 rem / 8600 req)", methodology_note: "Calculated estimate · Model-derived B777-F baseline" },
-    { code: "LAX", name: "LAX Cargo & Port of LA", city: "Los Angeles, CA", lat: 33.94, lng: -118.40, temp_celsius: 34.2, current_temp_c: 21.3, current_temp_f: 70.3, surface_pressure_hpa: 1005.7, relative_humidity: 91, wind_speed_kts: 0.9, primary_carrier: "Atlas Air / Prime Air", physics: { density_altitude_ft: 1420, thrust_loss_pct: 4.5, offload_lbs: 312, status: "NORMAL_OPERATIONS", advisory: "NOMINAL: Current OAT at LAX 21.3°C (70.3°F) matches NWS observation. Normal flight parameters." }, delay_cost_usd: 5200, has_heat_spike: false, fortyguard_status: "FortyGuard API Key: Insufficient Credits (4800 rem / 8600 req)", methodology_note: "Calculated estimate · Model-derived B777-F baseline" },
-    { code: "ORD", name: "Chicago O'Hare Freight Hub", city: "Chicago, IL", lat: 41.97, lng: -87.90, temp_celsius: 35.1, current_temp_c: 17.8, current_temp_f: 64.0, surface_pressure_hpa: 995.9, relative_humidity: 95, wind_speed_kts: 1.5, primary_carrier: "United Cargo / DHL", physics: { density_altitude_ft: 1680, thrust_loss_pct: 3.5, offload_lbs: 0, status: "NORMAL_OPERATIONS", advisory: "NOMINAL: OAT at ORD 17.8°C (64.0°F). Standard climb profile into Chicago O'Hare." }, delay_cost_usd: 5400, has_heat_spike: false, fortyguard_status: "FortyGuard API Key: Insufficient Credits (4800 rem / 8600 req)", methodology_note: "Calculated estimate · Model-derived B777-F baseline" }
-  ];
+  const activeHubs = cargoTelemetry?.hubs || [];
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col font-sans selection:bg-white selection:text-black">
@@ -95,14 +88,6 @@ export default function CargoTerminal() {
           </div>
 
           <div className="flex flex-col items-end gap-2">
-            <div className="flex items-center gap-3 bg-[#09090b] p-3.5 rounded-2xl border border-neutral-800 text-xs font-mono">
-              <Activity className="w-5 h-5 text-cyan-400 animate-pulse" />
-              <div>
-                <span className="text-neutral-400 block text-[10px] uppercase font-bold">USA Active Cargo Hubs</span>
-                <span className="font-extrabold text-white text-sm">140 USA Ports & 30 Air Hubs</span>
-              </div>
-            </div>
-
             <button
               onClick={handleManualRefresh}
               disabled={isRefreshing}
@@ -115,7 +100,7 @@ export default function CargoTerminal() {
         </div>
 
         {/* Commercial Risk Exposure Summary Cards */}
-        <section className="grid grid-cols-1 sm:grid-cols-4 gap-4 font-mono">
+        <section className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-mono">
           <div className="p-5 rounded-2xl bg-[#09090b] border border-neutral-800 space-y-2 shadow-xl">
             <span className="text-[10px] uppercase text-neutral-400 font-bold block flex items-center gap-1.5">
               <Plane className="w-3.5 h-3.5 text-cyan-400" />
@@ -127,27 +112,7 @@ export default function CargoTerminal() {
             <span className="text-[10px] text-emerald-400 block font-bold">OpenSky ADS-B 100% Verified</span>
           </div>
 
-          <div className="p-5 rounded-2xl bg-[#09090b] border border-neutral-800 space-y-2 shadow-xl">
-            <span className="text-[10px] uppercase text-neutral-400 font-bold block flex items-center gap-1.5">
-              <Scale className="w-3.5 h-3.5 text-amber-400" />
-              Total USA MTOW Offload Req
-            </span>
-            <p className="text-3xl font-extrabold text-amber-400">
-              {cargoTelemetry?.total_offload_req_tons || 2.4} <span className="text-xs text-neutral-400 font-normal">tons</span>
-            </p>
-            <span className="text-[10px] text-neutral-500 block">Density Altitude Payload Trim</span>
-          </div>
 
-          <div className="p-5 rounded-2xl bg-[#09090b] border border-neutral-800 space-y-2 shadow-xl">
-            <span className="text-[10px] uppercase text-neutral-400 font-bold block flex items-center gap-1.5">
-              <DollarSign className="w-3.5 h-3.5 text-rose-400" />
-              Financial Delay Risk Exposure
-            </span>
-            <p className="text-3xl font-extrabold text-rose-400">
-              ${(cargoTelemetry?.total_financial_exposure_usd || 32400).toLocaleString()}
-            </p>
-            <span className="text-[10px] text-neutral-500 block">Model-Derived Estimate (B777-F)</span>
-          </div>
 
           <div className="p-5 rounded-2xl bg-[#09090b] border border-neutral-800 space-y-2 shadow-xl">
             <span className="text-[10px] uppercase text-neutral-400 font-bold block flex items-center gap-1.5">
@@ -342,13 +307,7 @@ export default function CargoTerminal() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-neutral-800">
-                {(liveVehicles.length > 0 ? liveVehicles : [
-                  { callsign: "FDX1842", carrier: "FedEx Express Cargo", lat: 34.51, lng: -106.82, altitude_m: 9450, speed_kts: 482, destination_code: "PHX", destination_name: "Phoenix Sky Harbor", dest_temp_c: 42.5, density_altitude_ft: 4835, thrust_loss_pct: 13.0, offload_lbs: 4800, payload_status: "CRITICAL_HEAT_HAZARD", advisory: "CRITICAL: High DA at PHX (4,835 ft). Require 4,800 lbs MTOW payload offload for climb gradient safety.", type: "aviation" },
-                  { callsign: "UPS992", carrier: "UPS Worldport Air", lat: 37.12, lng: -88.42, altitude_m: 10100, speed_kts: 505, destination_code: "SDF", destination_name: "Louisville UPS Hub", dest_temp_c: 36.8, density_altitude_ft: 3237, thrust_loss_pct: 7.4, offload_lbs: 1800, payload_status: "ELEVATED_PAYLOAD_RESTRICTION", advisory: "WARNING: Moderate DA at SDF (3,237 ft). Recommend 1,800 lbs fuel/cargo trimming.", type: "aviation" },
-                  { callsign: "GTI402", carrier: "Atlas Air Heavy Freight", lat: 31.85, lng: -118.20, altitude_m: 8800, speed_kts: 465, destination_code: "LAX", destination_name: "LAX Freight", dest_temp_c: 34.2, density_altitude_ft: 2424, thrust_loss_pct: 4.1, offload_lbs: 0, payload_status: "NORMAL_OPERATIONS", advisory: "NOMINAL: DA at LAX within normal flight parameters.", type: "aviation" },
-                  { callsign: "UAL1778", carrier: "United Cargo Freight", lat: 41.85, lng: -89.73, altitude_m: 9105, speed_kts: 446, destination_code: "ORD", destination_name: "Chicago O'Hare", dest_temp_c: 35.1, density_altitude_ft: 2910, thrust_loss_pct: 6.2, offload_lbs: 0, payload_status: "NORMAL_OPERATIONS", advisory: "NOMINAL: Standard climb profile into Chicago O'Hare.", type: "aviation" },
-                  { callsign: "DAL2323", carrier: "Delta Air Cargo", lat: 35.08, lng: -84.75, altitude_m: 9753, speed_kts: 444, destination_code: "MEM", destination_name: "Memphis Hub", dest_temp_c: 38.2, density_altitude_ft: 3241, thrust_loss_pct: 7.5, offload_lbs: 2100, payload_status: "ELEVATED_PAYLOAD_RESTRICTION", advisory: "WARNING: DA at MEM (3,241 ft). Offload 2,100 lbs or reschedule departure.", type: "aviation" }
-                ]).map((v, idx) => (
+                {liveVehicles.map((v, idx) => (
                   <tr key={`${v.callsign}-${idx}`} className="hover:bg-neutral-900/60 transition-colors">
                     <td className="py-3.5 px-4 font-bold text-white flex items-center gap-2">
                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />

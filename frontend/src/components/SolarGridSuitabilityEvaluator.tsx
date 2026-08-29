@@ -220,7 +220,14 @@ export default function SolarGridSuitabilityEvaluator() {
     );
 
     // Render Center Site Marker
-    const marker = L.marker([selectedSite.lat, selectedSite.lng]).addTo(layerGroup);
+    const customCenterIcon = L.divIcon({
+      html: `<div class="w-5 h-5 rounded-full bg-cyan-400 border-[3px] border-black shadow-[0_0_15px_rgba(34,211,238,0.8)] animate-pulse"></div>`,
+      className: "custom-center-pin",
+      iconSize: [20, 20],
+      iconAnchor: [10, 10],
+    });
+
+    const marker = L.marker([selectedSite.lat, selectedSite.lng], { icon: customCenterIcon }).addTo(layerGroup);
     marker.bindTooltip(`<b>${selectedSite.name}</b><br>Observed Temp: <b>${selectedSite.obs_temp_c}°C</b> (${selectedSite.obs_temp_f}°F)`, {
       permanent: true,
       direction: "top",

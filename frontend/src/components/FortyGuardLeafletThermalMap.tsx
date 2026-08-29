@@ -9,8 +9,8 @@ export interface TempPoint {
   name: string;
   lat: number;
   lng: number;
-  temp_f: number;
   temp_c: number;
+  temp_f: number;
 }
 
 export interface HubLocationConfig {
@@ -21,8 +21,7 @@ export interface HubLocationConfig {
   lat: number;
   lng: number;
   zoom: number;
-  // Three temperature anchor points
-  temp_points: TempPoint[];
+  point_offsets: { id: string; name: string; lat: number; lng: number; offset_c: number | "fixed_cold" }[];
 }
 
 const LOCATIONS: HubLocationConfig[] = [
@@ -34,10 +33,10 @@ const LOCATIONS: HubLocationConfig[] = [
     lat: 40.6413,
     lng: -73.7781,
     zoom: 14,
-    temp_points: [
-      { id: "p1", name: "Runway 22R Tarmac (Hot Zone)", lat: 40.6435, lng: -73.7740, temp_f: 72.85, temp_c: 45.4 },
-      { id: "p2", name: "Cargo Terminal 4 (Warm Zone)", lat: 40.6470, lng: -73.7820, temp_f: 72.05, temp_c: 42.1 },
-      { id: "p3", name: "Cold Storage Vault (Cool Zone)", lat: 40.6360, lng: -73.7860, temp_f: 71.50, temp_c: 14.2 },
+    point_offsets: [
+      { id: "p1", name: "Runway 22R Tarmac (Hot Zone)", lat: 40.6435, lng: -73.7740, offset_c: 3.3 },
+      { id: "p2", name: "Cargo Terminal 4 (Warm Zone)", lat: 40.6470, lng: -73.7820, offset_c: 0.0 },
+      { id: "p3", name: "Cold Storage Vault (Cool Zone)", lat: 40.6360, lng: -73.7860, offset_c: "fixed_cold" },
     ]
   },
   {
@@ -48,10 +47,10 @@ const LOCATIONS: HubLocationConfig[] = [
     lat: 33.4352,
     lng: -112.0101,
     zoom: 14,
-    temp_points: [
-      { id: "p1", name: "Runway 3R Touchdown (Hot Zone)", lat: 33.4370, lng: -112.0050, temp_f: 116.2, temp_c: 46.8 },
-      { id: "p2", name: "Cargo Apron 3 (Warm Zone)", lat: 33.4330, lng: -112.0120, temp_f: 111.5, temp_c: 44.2 },
-      { id: "p3", name: "Pharma Vault (Cool Zone)", lat: 33.4390, lng: -112.0220, temp_f: 61.7, temp_c: 16.5 },
+    point_offsets: [
+      { id: "p1", name: "Runway 3R Touchdown (Hot Zone)", lat: 33.4370, lng: -112.0050, offset_c: 4.5 },
+      { id: "p2", name: "Cargo Apron 3 (Warm Zone)", lat: 33.4330, lng: -112.0120, offset_c: 0.0 },
+      { id: "p3", name: "Pharma Vault (Cool Zone)", lat: 33.4390, lng: -112.0220, offset_c: "fixed_cold" },
     ]
   },
   {
@@ -62,57 +61,133 @@ const LOCATIONS: HubLocationConfig[] = [
     lat: 29.7200,
     lng: -95.2600,
     zoom: 14,
-    temp_points: [
-      { id: "p1", name: "Berth 4 Dock (Hot Zone)", lat: 29.7220, lng: -95.2550, temp_f: 109.5, temp_c: 43.1 },
-      { id: "p2", name: "Container Yard A (Warm Zone)", lat: 29.7180, lng: -95.2620, temp_f: 106.7, temp_c: 41.5 },
-      { id: "p3", name: "Climate Shield Yard (Cool Zone)", lat: 29.7250, lng: -95.2670, temp_f: 64.4, temp_c: 18.0 },
+    point_offsets: [
+      { id: "p1", name: "Berth 4 Dock (Hot Zone)", lat: 29.7220, lng: -95.2550, offset_c: 3.8 },
+      { id: "p2", name: "Container Yard A (Warm Zone)", lat: 29.7180, lng: -95.2620, offset_c: 0.0 },
+      { id: "p3", name: "Climate Shield Yard (Cool Zone)", lat: 29.7250, lng: -95.2670, offset_c: "fixed_cold" },
+    ]
+  },
+  {
+    id: "lax",
+    name: "LAX Cargo & Port of LA",
+    code: "LAX",
+    city: "Los Angeles, CA",
+    lat: 33.9416,
+    lng: -118.4085,
+    zoom: 14,
+    point_offsets: [
+      { id: "p1", name: "Tarmac Surface (Hot Zone)", lat: 33.9450, lng: -118.4100, offset_c: 2.8 },
+      { id: "p2", name: "Cargo Bay 5 (Warm Zone)", lat: 33.9400, lng: -118.4050, offset_c: 0.0 },
+      { id: "p3", name: "Deep Freeze Facility (Cool Zone)", lat: 33.9380, lng: -118.4120, offset_c: "fixed_cold" },
+    ]
+  },
+  {
+    id: "mem",
+    name: "Memphis FedEx World Hub",
+    code: "MEM",
+    city: "Memphis, TN",
+    lat: 35.0424,
+    lng: -89.9767,
+    zoom: 14,
+    point_offsets: [
+      { id: "p1", name: "Runway 18C (Hot Zone)", lat: 35.0450, lng: -89.9700, offset_c: 4.1 },
+      { id: "p2", name: "Sort Facility (Warm Zone)", lat: 35.0400, lng: -89.9800, offset_c: 0.0 },
+      { id: "p3", name: "Pharma Cold Chain (Cool Zone)", lat: 35.0350, lng: -89.9750, offset_c: "fixed_cold" },
+    ]
+  },
+  {
+    id: "ord",
+    name: "Chicago O'Hare Freight Hub",
+    code: "ORD",
+    city: "Chicago, IL",
+    lat: 41.9742,
+    lng: -87.9073,
+    zoom: 14,
+    point_offsets: [
+      { id: "p1", name: "South Cargo Apron (Hot Zone)", lat: 41.9700, lng: -87.9000, offset_c: 3.2 },
+      { id: "p2", name: "Terminal 5 Freight (Warm Zone)", lat: 41.9750, lng: -87.9100, offset_c: 0.0 },
+      { id: "p3", name: "Perishables Center (Cool Zone)", lat: 41.9800, lng: -87.9050, offset_c: "fixed_cold" },
+    ]
+  },
+  {
+    id: "ussav",
+    name: "Port of Savannah",
+    code: "USSAV",
+    city: "Savannah, GA",
+    lat: 32.1264,
+    lng: -81.1448,
+    zoom: 14,
+    point_offsets: [
+      { id: "p1", name: "Container Yard 3 (Hot Zone)", lat: 32.1280, lng: -81.1400, offset_c: 4.5 },
+      { id: "p2", name: "Berth 8 (Warm Zone)", lat: 32.1240, lng: -81.1480, offset_c: 0.0 },
+      { id: "p3", name: "Reefer Stacks (Cool Zone)", lat: 32.1220, lng: -81.1420, offset_c: "fixed_cold" },
+    ]
+  },
+  {
+    id: "nlrtm",
+    name: "Port of Rotterdam",
+    code: "NLRTM",
+    city: "Rotterdam, NL",
+    lat: 51.9496,
+    lng: 4.1436,
+    zoom: 14,
+    point_offsets: [
+      { id: "p1", name: "Euromax Terminal (Hot Zone)", lat: 51.9520, lng: 4.1400, offset_c: 2.5 },
+      { id: "p2", name: "Maasvlakte 2 (Warm Zone)", lat: 51.9480, lng: 4.1480, offset_c: 0.0 },
+      { id: "p3", name: "Cool Port (Cool Zone)", lat: 51.9460, lng: 4.1420, offset_c: "fixed_cold" },
     ]
   }
 ];
 
-// FortyGuard Legend Scale (12 Color Tiers)
-const LEGEND_ITEMS = [
-  { label: "72.39°F – 72.93°F", color: "#b91c1c", minF: 72.39 },
-  { label: "72.05°F – 72.38°F", color: "#dc2626", minF: 72.05 },
-  { label: "71.81°F – 72.04°F", color: "#ea580c", minF: 71.81 },
-  { label: "71.76°F – 71.81°F", color: "#f97316", minF: 71.76 },
-  { label: "71.75°F – 71.76°F", color: "#facc15", minF: 71.75 },
-  { label: "71.74°F – 71.75°F", color: "#fde047", minF: 71.74 },
-  { label: "71.73°F – 71.74°F", color: "#fef08a", minF: 71.73 },
-  { label: "71.71°F – 71.73°F", color: "#d9f99d", minF: 71.71 },
-  { label: "71.67°F – 71.71°F", color: "#86efac", minF: 71.67 },
-  { label: "71.64°F – 71.67°F", color: "#2dd4bf", minF: 71.64 },
-  { label: "71.60°F – 71.63°F", color: "#38bdf8", minF: 71.60 },
-  { label: "71.50°F – 71.60°F", color: "#0284c7", minF: 71.50 },
+const COLORS = [
+  "#0284c7", "#38bdf8", "#2dd4bf", "#86efac", "#d9f99d", 
+  "#fef08a", "#fde047", "#facc15", "#f97316", "#ea580c", 
+  "#dc2626", "#b91c1c"
 ];
-
-function getFortyGuardColor(tempF: number): string {
-  if (tempF >= 72.39) return "#b91c1c";
-  if (tempF >= 72.05) return "#dc2626";
-  if (tempF >= 71.81) return "#ea580c";
-  if (tempF >= 71.76) return "#f97316";
-  if (tempF >= 71.75) return "#facc15";
-  if (tempF >= 71.74) return "#fde047";
-  if (tempF >= 71.73) return "#fef08a";
-  if (tempF >= 71.71) return "#d9f99d";
-  if (tempF >= 71.67) return "#86efac";
-  if (tempF >= 71.64) return "#2dd4bf";
-  if (tempF >= 71.60) return "#38bdf8";
-  return "#0284c7";
-}
 
 export default function FortyGuardLeafletThermalMap() {
   const [selectedLoc, setSelectedLoc] = useState<HubLocationConfig>(LOCATIONS[0]);
-  const [selectedPoint, setSelectedPoint] = useState<TempPoint | null>(LOCATIONS[0].temp_points[0]);
+  const [dynamicPoints, setDynamicPoints] = useState<TempPoint[]>([]);
+  const [selectedPoint, setSelectedPoint] = useState<TempPoint | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [heatmapRadiusMultiplier, setHeatmapRadiusMultiplier] = useState(1.0);
+  
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const layerGroupRef = useRef<any>(null);
 
+  // Fetch real-time temperature from Open-Meteo for the selected location
   useEffect(() => {
-    if (typeof window === "undefined" || !mapContainerRef.current) return;
+    setIsLoading(true);
+    fetch(`https://api.open-meteo.com/v1/forecast?latitude=${selectedLoc.lat}&longitude=${selectedLoc.lng}&current=temperature_2m`)
+      .then(res => res.json())
+      .then(data => {
+        const baseTempC = data?.current?.temperature_2m ?? 20.0;
+        
+        // Generate dynamic points based on offsets
+        const generated = selectedLoc.point_offsets.map(pt => {
+          const tempC = pt.offset_c === "fixed_cold" ? 14.2 : baseTempC + pt.offset_c;
+          return {
+            ...pt,
+            temp_c: Number(tempC.toFixed(1)),
+            temp_f: Number((tempC * 9/5 + 32).toFixed(1))
+          };
+        });
+
+        setDynamicPoints(generated);
+        setSelectedPoint(generated[0]);
+        setIsLoading(false);
+      })
+      .catch(err => {
+        console.error("Failed to fetch weather for map", err);
+        setIsLoading(false);
+      });
+  }, [selectedLoc]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !mapContainerRef.current || dynamicPoints.length === 0) return;
     const L = require("leaflet");
 
-    // Initialize Leaflet Map once
     if (!mapRef.current) {
       const map = L.map(mapContainerRef.current, {
         center: [selectedLoc.lat, selectedLoc.lng],
@@ -122,64 +197,56 @@ export default function FortyGuardLeafletThermalMap() {
 
       L.control.zoom({ position: "bottomright" }).addTo(map);
       mapRef.current = map;
-
-      const layerGroup = L.layerGroup().addTo(map);
-      layerGroupRef.current = layerGroup;
+      layerGroupRef.current = L.layerGroup().addTo(map);
     }
 
     const map = mapRef.current;
     const layerGroup = layerGroupRef.current;
 
-    // Fly smoothly to location
     map.flyTo([selectedLoc.lat, selectedLoc.lng], selectedLoc.zoom, { duration: 1.0 });
     layerGroup.clearLayers();
 
-    // Step 1: Fetch Open Source Satellite Tiles (Esri World Imagery)
     L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
       maxZoom: 19,
       attribution: "&copy; Esri &copy; OpenStreetMap &copy; FortyGuard Microclimate",
     }).addTo(layerGroup);
 
-    // Step 3 & 4: Make Grid Overlay & Fill Grids Replicating FortyGuard Heatmap
-    const p1 = selectedLoc.temp_points[0];
-    const p2 = selectedLoc.temp_points[1];
-    const p3 = selectedLoc.temp_points[2];
+    const [p1, p2, p3] = dynamicPoints;
+    const minF = Math.min(p1.temp_f, p2.temp_f, p3.temp_f);
+    const maxF = Math.max(p1.temp_f, p2.temp_f, p3.temp_f);
 
-    const rows = 14;
-    const cols = 12;
-    const stepLat = 0.0016;
-    const stepLng = 0.0022;
-    const startLat = selectedLoc.lat + (rows / 2) * stepLat;
-    const startLng = selectedLoc.lng - (cols / 2) * stepLng;
+    const getDynamicColor = (tempF: number) => {
+      const reversedColors = [...COLORS].reverse();
+      const pct = Math.max(0, Math.min(1, (tempF - minF) / (maxF - minF || 1)));
+      const idx = Math.min(reversedColors.length - 1, Math.floor(pct * reversedColors.length));
+      return reversedColors[reversedColors.length - 1 - idx];
+    };
 
-    for (let r = 0; r < rows; r++) {
-      for (let c = 0; c < cols; c++) {
-        // Octagonal Grid Mask
-        const distFromCenter = Math.hypot((r - rows / 2) / (rows / 2), (c - cols / 2) / (cols / 2));
+    const baseRows = 14, baseCols = 12, stepLat = 0.0016, stepLng = 0.0022;
+    const currentRows = Math.floor(baseRows * heatmapRadiusMultiplier);
+    const currentCols = Math.floor(baseCols * heatmapRadiusMultiplier);
+    const startLat = selectedLoc.lat + (currentRows / 2) * stepLat;
+    const startLng = selectedLoc.lng - (currentCols / 2) * stepLng;
+
+    for (let r = 0; r < currentRows; r++) {
+      for (let c = 0; c < currentCols; c++) {
+        const distFromCenter = Math.hypot((r - currentRows / 2) / (currentRows / 2), (c - currentCols / 2) / (currentCols / 2));
         if (distFromCenter > 0.95) continue;
 
-        const cellNorth = startLat - r * stepLat;
-        const cellSouth = cellNorth - stepLat;
-        const cellWest = startLng + c * stepLng;
-        const cellEast = cellWest + stepLng;
-        const cellLat = (cellNorth + cellSouth) / 2;
-        const cellLng = (cellWest + cellEast) / 2;
+        const cellNorth = startLat - r * stepLat, cellSouth = cellNorth - stepLat;
+        const cellWest = startLng + c * stepLng, cellEast = cellWest + stepLng;
+        const cellLat = (cellNorth + cellSouth) / 2, cellLng = (cellWest + cellEast) / 2;
 
-        // Step 2 Interpolation: Calculate temperature from 3 anchor points
         const d1 = Math.hypot(cellLat - p1.lat, cellLng - p1.lng) + 0.0001;
         const d2 = Math.hypot(cellLat - p2.lat, cellLng - p2.lng) + 0.0001;
         const d3 = Math.hypot(cellLat - p3.lat, cellLng - p3.lng) + 0.0001;
 
-        const w1 = 1 / Math.pow(d1, 2);
-        const w2 = 1 / Math.pow(d2, 2);
-        const w3 = 1 / Math.pow(d3, 2);
-
+        const w1 = 1 / Math.pow(d1, 2), w2 = 1 / Math.pow(d2, 2), w3 = 1 / Math.pow(d3, 2);
         const interpF = (p1.temp_f * w1 + p2.temp_f * w2 + p3.temp_f * w3) / (w1 + w2 + w3);
         const interpC = (p1.temp_c * w1 + p2.temp_c * w2 + p3.temp_c * w3) / (w1 + w2 + w3);
 
-        const color = getFortyGuardColor(interpF);
+        const color = getDynamicColor(interpF);
 
-        // Step 4: Fill Grid Box
         const gridBox = L.rectangle([[cellNorth, cellWest], [cellSouth, cellEast]], {
           stroke: false,
           fillColor: color,
@@ -187,14 +254,13 @@ export default function FortyGuardLeafletThermalMap() {
         }).addTo(layerGroup);
 
         gridBox.bindTooltip(
-          `<b>FortyGuard Grid Box</b><br>Temp: <b>${interpF.toFixed(2)}°F</b> (${interpC.toFixed(1)}°C)`,
+          `<b>FortyGuard Grid Box</b><br>Temp: <b>${interpC.toFixed(1)}°C</b> (${interpF.toFixed(1)}°F)`,
           { permanent: false, direction: "center", className: "leaflet-thermal-tooltip" }
         );
       }
     }
 
-    // Step 2: Draw the 3 Temperature Anchor Pins
-    selectedLoc.temp_points.forEach((pt) => {
+    dynamicPoints.forEach((pt) => {
       const pinHtml = `
         <div class="relative cursor-pointer group flex items-center justify-center">
           <div class="w-8 h-8 rounded-full bg-black/90 border-2 border-white text-white font-mono font-extrabold text-[10px] flex items-center justify-center shadow-2xl transition-transform group-hover:scale-125">
@@ -202,127 +268,105 @@ export default function FortyGuardLeafletThermalMap() {
           </div>
         </div>
       `;
-      const customIcon = L.divIcon({
-        html: pinHtml,
-        className: "custom-thermal-pin",
-        iconSize: [32, 32],
-        iconAnchor: [16, 16],
-      });
-
-      const marker = L.marker([pt.lat, pt.lng], { icon: customIcon }).addTo(layerGroup);
+      const marker = L.marker([pt.lat, pt.lng], {
+        icon: L.divIcon({ html: pinHtml, className: "custom-thermal-pin", iconSize: [32, 32], iconAnchor: [16, 16] })
+      }).addTo(layerGroup);
       marker.on("click", () => setSelectedPoint(pt));
     });
 
-  }, [selectedLoc]);
+  }, [selectedLoc, dynamicPoints, heatmapRadiusMultiplier]);
 
   return (
-    <section className="rounded-3xl border border-neutral-800 bg-[#09090b] p-6 space-y-4 font-mono text-white shadow-2xl">
-      
-      {/* Header & Location Selection */}
+    <section className="rounded-3xl border border-neutral-800 bg-[#09090b] p-6 space-y-6 font-mono text-white shadow-2xl">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-neutral-800 pb-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping" />
-            <span className="text-xs uppercase text-rose-400 font-extrabold tracking-wider">
-              FortyGuard Microclimate Heatmap Engine
-            </span>
+            <span className="text-xs uppercase text-rose-400 font-extrabold tracking-wider">FortyGuard Spatial Thermal Engine</span>
           </div>
-          <h3 className="font-extrabold text-base text-white uppercase font-heading">
-            {selectedLoc.name} ({selectedLoc.city})
-          </h3>
+          <h3 className="font-extrabold text-base text-white uppercase font-heading">{selectedLoc.name} ({selectedLoc.city})</h3>
         </div>
-
-        <div className="flex items-center gap-2">
-          {LOCATIONS.map((loc) => (
-            <button
-              key={loc.id}
-              onClick={() => {
-                setSelectedLoc(loc);
-                setSelectedPoint(loc.temp_points[0]);
-              }}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-                selectedLoc.id === loc.id
-                  ? "bg-white text-black shadow-lg"
-                  : "bg-neutral-900 text-neutral-400 border border-neutral-800 hover:text-white"
-              }`}
-            >
-              {loc.code}
-            </button>
-          ))}
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <select
+            value={selectedLoc.id}
+            onChange={(e) => {
+              const loc = LOCATIONS.find(l => l.id === e.target.value);
+              if (loc) setSelectedLoc(loc);
+            }}
+            className="w-full sm:w-auto bg-[#09090b] text-white border border-neutral-700 hover:border-cyan-500 rounded-xl px-4 py-2 text-xs font-bold font-mono shadow-xl outline-none focus:ring-1 focus:ring-cyan-500 transition-all cursor-pointer appearance-none"
+            style={{ backgroundImage: "url(\"data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e\")", backgroundRepeat: "no-repeat", backgroundPosition: "right 1rem center", backgroundSize: "1em", paddingRight: "2.5rem" }}
+          >
+            {LOCATIONS.map((loc) => (
+              <option key={loc.id} value={loc.id}>
+                {loc.name} ({loc.code})
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
-      {/* Main Map + Step 5: Legend Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* Step 1 & 3 & 4: Map Container (8 cols) */}
-        <div className="lg:col-span-8 space-y-3">
-          <div className="relative w-full h-[460px] rounded-2xl border border-neutral-800 overflow-hidden bg-black">
-            <div ref={mapContainerRef} className="w-full h-full z-10" />
-
-            <div className="absolute top-3 left-3 z-20 bg-black/90 border border-neutral-800 px-3 py-2 rounded-xl backdrop-blur-md text-xs">
-              <span className="text-[9px] text-neutral-400 block uppercase font-bold">OpenSource Satellite Base Map</span>
-              <span className="text-white font-bold">Esri World Imagery + FortyGuard Grid</span>
-            </div>
-          </div>
-
-          {/* Selected Point Status Bar */}
-          {selectedPoint && (
-            <div className="p-3 rounded-xl bg-neutral-950 border border-neutral-850 flex items-center justify-between text-xs">
-              <div>
-                <span className="text-[9px] text-neutral-400 block uppercase">Selected Temperature Point</span>
-                <span className="font-bold text-white">{selectedPoint.name}</span>
-              </div>
-              <div className="text-right">
-                <span className="px-3 py-1 rounded bg-rose-950 text-rose-300 border border-rose-800 font-extrabold text-xs">
-                  {selectedPoint.temp_f}°F ({selectedPoint.temp_c}°C)
-                </span>
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+        {/* Left 50% - Map */}
+        <div className="relative w-full h-[540px] rounded-2xl border border-neutral-800 overflow-hidden bg-black shadow-inner">
+          {isLoading && (
+            <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm">
+              <span className="text-white text-xs font-bold animate-pulse">Syncing Live Atmospheric Data...</span>
             </div>
           )}
+          <div ref={mapContainerRef} className="w-full h-full z-10" />
+          <div className="absolute top-4 left-4 z-20 bg-black/90 border border-neutral-800 px-3 py-2 rounded-xl backdrop-blur-md text-xs shadow-xl">
+            <span className="text-[9px] text-neutral-400 block uppercase font-bold">Satellite Topology</span>
+            <span className="text-white font-bold">Real-time Microclimate Grid</span>
+          </div>
         </div>
 
-        {/* Step 5: Legend (4 cols) */}
-        <div className="lg:col-span-4 bg-neutral-950 p-4 rounded-2xl border border-neutral-800 space-y-3 text-xs">
-          
-          {/* Step 2: Three Temp Points Legend Card */}
-          <div className="border-b border-neutral-800 pb-3 space-y-2">
-            <span className="text-[10px] text-neutral-400 uppercase font-bold block">Step 2: Three Temperature Points</span>
-            <div className="space-y-1.5">
-              {selectedLoc.temp_points.map((pt, idx) => (
-                <div
-                  key={pt.id}
-                  onClick={() => setSelectedPoint(pt)}
-                  className={`p-2 rounded-xl border cursor-pointer transition-all flex items-center justify-between text-[11px] ${
-                    selectedPoint?.id === pt.id
-                      ? "bg-neutral-900 border-cyan-500 text-white"
-                      : "bg-black/60 border-neutral-850 text-neutral-400 hover:text-white"
-                  }`}
-                >
-                  <span>P{idx + 1}: {pt.name}</span>
-                  <span className="font-bold text-white">{pt.temp_f}°F</span>
-                </div>
-              ))}
+        {/* Right 50% - Slider & Legend Centered */}
+        <div className="flex flex-col justify-center gap-8 h-[540px]">
+          <div className="bg-neutral-950 p-8 rounded-3xl border border-neutral-800 space-y-6 shadow-2xl">
+            <div className="flex flex-col gap-1.5">
+              <span className="text-sm text-neutral-300 font-bold uppercase tracking-wider">Spatial Grid Coverage</span>
+              <span className="text-xs text-neutral-500">Adjust the thermal interpolation radius across the logistics node</span>
+            </div>
+            <div className="flex items-center gap-5">
+              <input
+                type="range"
+                min="0.5"
+                max="3.0"
+                step="0.1"
+                value={heatmapRadiusMultiplier}
+                onChange={(e) => setHeatmapRadiusMultiplier(parseFloat(e.target.value))}
+                className="w-full accent-cyan-500 bg-neutral-800 h-2.5 rounded-lg cursor-pointer"
+              />
+              <span className="text-sm font-bold w-14 text-right text-cyan-400">{(heatmapRadiusMultiplier * 100).toFixed(0)}%</span>
             </div>
           </div>
 
-          {/* Step 5: Official FortyGuard Heatmap Legend */}
-          <div>
-            <span className="text-[10px] text-neutral-400 uppercase font-bold block mb-2">Step 5: FortyGuard Legend (°F)</span>
-            <div className="space-y-1 max-h-[220px] overflow-y-auto pr-1">
-              {LEGEND_ITEMS.map((item, i) => (
-                <div key={i} className="flex items-center justify-between p-1.5 rounded bg-black/60 text-[10px]">
-                  <div className="flex items-center gap-2">
-                    <span className="w-3.5 h-3.5 rounded border border-white/20" style={{ backgroundColor: item.color }} />
-                    <span className="text-white font-bold">{item.label}</span>
+          <div className="bg-neutral-950 p-8 rounded-3xl border border-neutral-800 flex flex-col justify-center shadow-2xl">
+            <span className="text-xs text-neutral-400 uppercase font-bold block mb-6 border-b border-neutral-800 pb-3 tracking-wider">Thermal Intensity Gradient</span>
+            {dynamicPoints.length > 0 && (
+              <div className="flex flex-col gap-4 px-2 py-4">
+                <div 
+                  className="w-full h-6 rounded-full shadow-inner border border-white/10 relative" 
+                  style={{ background: `linear-gradient(to right, ${COLORS.join(', ')})` }}
+                />
+                <div className="flex justify-between items-center text-xs font-bold font-mono">
+                  <div className="flex flex-col items-start gap-1">
+                    <span className="text-cyan-400 uppercase text-[10px] tracking-widest">Min</span>
+                    <span className="text-white bg-black px-2 py-1 rounded border border-neutral-800">
+                      {Math.min(...dynamicPoints.map(p => p.temp_c)).toFixed(1)}°C / {Math.min(...dynamicPoints.map(p => p.temp_f)).toFixed(1)}°F
+                    </span>
+                  </div>
+                  <div className="flex flex-col items-end gap-1">
+                    <span className="text-rose-500 uppercase text-[10px] tracking-widest">Max</span>
+                    <span className="text-white bg-black px-2 py-1 rounded border border-neutral-800">
+                      {Math.max(...dynamicPoints.map(p => p.temp_c)).toFixed(1)}°C / {Math.max(...dynamicPoints.map(p => p.temp_f)).toFixed(1)}°F
+                    </span>
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            )}
           </div>
-
         </div>
-
       </div>
     </section>
   );

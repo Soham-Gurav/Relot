@@ -2,6 +2,7 @@ import yfinance as yf
 import pandas as pd
 import numpy as np
 from datetime import datetime, timedelta
+import requests
 
 STOCK_PROFILES = {
     "FDX": {
@@ -451,27 +452,50 @@ def get_stock_multi_history(symbol: str, period: str = "1y"):
             raw_dates = [idx for idx, _ in hist.iterrows()]
             n = len(raw_closes)
 
+            start_date_str = raw_dates[0].strftime("%Y-%m-%d")
+            end_date_str = raw_dates[-1].strftime("%Y-%m-%d")
+
+            # Map node_id to coordinates
+            NODE_COORDS = {
+                "airport_phoenix": (33.4352, -112.0101),
+                "port_houston": (29.7268, -95.2655),
+                "iowa_agri": (41.5868, -93.6250),
+                "grid_ercot": (29.7604, -95.3698),
+                "texas_grid": (29.7604, -95.3698)
+            }
+            node_id = profile.get("node_id", "airport_phoenix")
+            lat, lng = NODE_COORDS.get(node_id, (33.4352, -112.0101))
+
+            temp_map = {}
+            try:
+                url = f"https://archive-api.open-meteo.com/v1/archive?latitude={lat}&longitude={lng}&start_date={start_date_str}&end_date={end_date_str}&daily=temperature_2m_max&timezone=UTC"
+                r = requests.get(url, timeout=5)
+                if r.status_code == 200:
+                    daily_data = r.json().get("daily", {})
+                    times = daily_data.get("time", [])
+                    max_temps = daily_data.get("temperature_2m_max", [])
+                    for t_idx, t_str in enumerate(times):
+                        if max_temps[t_idx] is not None:
+                            temp_map[t_str] = max_temps[t_idx]
+            except Exception as e:
+                print(f"Historical weather API failed: {e}")
+
             temperatures = []
             is_spikes = []
             severities = []
 
             for i, date_obj in enumerate(raw_dates):
-                doy = date_obj.timetuple().tm_yday
-                month = date_obj.month
-                
-                # Base seasonal microclimate temperature (Summer peak in July/Aug, Winter trough in Jan)
-                base_temp = 25.0 + 12.0 * np.sin((doy - 105) * 2 * np.pi / 365.0)
-                noise = 2.0 * np.sin(i * 0.8) + 1.2 * np.cos(i * 1.7)
-                
-                # Extreme summer heatwave domes (June-September)
-                is_summer = month in [6, 7, 8, 9]
-                spike_bonus = 0.0
-                if is_summer:
-                    cycle_day = (doy - 150) % 26
-                    if cycle_day in [8, 9, 10, 11]: # 4-day heatwave dome
-                        spike_bonus = 6.5 + 2.0 * np.sin(i * 0.5)
+                date_str = date_obj.strftime("%Y-%m-%d")
+                real_temp = temp_map.get(date_str)
 
-                total_temp = float(round(base_temp + noise + spike_bonus, 1))
+                # Fallback to historical mock if API failed or missing
+                if real_temp is None:
+                    doy = date_obj.timetuple().tm_yday
+                    base_temp = 25.0 + 12.0 * np.sin((doy - 105) * 2 * np.pi / 365.0)
+                    noise = 2.0 * np.sin(i * 0.8)
+                    real_temp = round(base_temp + noise, 1)
+
+                total_temp = float(round(real_temp, 1))
                 is_spike = bool(total_temp >= spike_threshold)
                 severity = "CRITICAL" if total_temp >= (spike_threshold + 3.5) else ("HIGH" if is_spike else "NORMAL")
 
