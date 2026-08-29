@@ -19,7 +19,7 @@ export default function ScoutPage() {
   const handleAnalyze = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/scout/analyze", {
+      const res = await fetch("/api/scout/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

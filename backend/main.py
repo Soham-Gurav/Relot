@@ -487,5 +487,34 @@ async def scout_location(req: ScoutRequest):
         raise HTTPException(status_code=500, detail="Failed to fetch scout intelligence")
     return result
 
+from fastapi.staticfiles import StaticFiles
+import subprocess
+import atexit
+
+# -----------------------------------------------------------------
+# Single Command Setup (Frontend + Backend)
+# -----------------------------------------------------------------
+frontend_out = os.path.join(os.path.dirname(__file__), "..", "frontend", "out")
+frontend_src = os.path.join(os.path.dirname(__file__), "..", "frontend")
+
+if os.path.isdir(frontend_out):
+    # PRODUCTION / RENDER MODE: Serve statically built Next.js frontend
+    app.mount("/", StaticFiles(directory=frontend_out, html=True), name="frontend")
+else:
+    # LOCAL DEV MODE: Start Next.js dev server alongside FastAPI
+    try:
+        print("Starting Next.js frontend in development mode...")
+        # Use shell=True for cross-platform compatibility (Windows npm.cmd etc)
+        npm_cmd = "npm.cmd" if os.name == "nt" else "npm"
+        frontend_process = subprocess.Popen([npm_cmd, "run", "dev"], cwd=frontend_src)
+        
+        def cleanup_frontend():
+            frontend_process.terminate()
+            
+        atexit.register(cleanup_frontend)
+    except Exception as e:
+        print(f"Failed to start frontend dev server: {e}")
+
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    port = int(os.environ.get("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
